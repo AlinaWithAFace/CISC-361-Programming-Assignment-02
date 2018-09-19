@@ -1,9 +1,7 @@
-CISC361-010 Project 2
-
 Programming Assignment 2
 ========================
 
-**Writing a Shell**
+## Writing a Shell
 
 ### Objectives
 
@@ -14,8 +12,8 @@ The objectives of this project are to learn how a Unix shell works, to write a s
 *   Wikipedia articles on [Unix shells](http://en.wikipedia.org/wiki/Unix_shell) and [tcsh](http://en.wikipedia.org/wiki/TENEX_C_shell).
 *   Man pages for Unix system calls and C library function calls.
 *   Official [tcsh man page](http://www.unix.com/man-page/OSX/1/tcsh/).
-*   [shell skeleton code](skeleton-code) to get you started.
-*   [my random sample code](sample-code) to get you to experiment more.
+*   [shell skeleton code](https://www.eecis.udel.edu/~cshen/361/Proj_2/skeleton-code/) to get you started.
+*   [my random sample code](https://www.eecis.udel.edu/~cshen/361/Proj_2/sample-code/) to get you to experiment more.
 
 ### The Assignment
 
@@ -52,6 +50,7 @@ What you need to do is to have a loop that will print a prompt (consisting of a 
 *   **`kill`** - When given just a pid sends a SIGTERM to it with `kill(2)`. When given a signal number (with a - in front of it) sends that signal to the pid. (e.g., `kill 5678`, `kill -9 5678`).
 *   **`prompt`** - When ran with no arguments, prompts for a new prompt prefix string. When given an argument make that the new prompt prefix. For instance, let's assume `cwd` is `/usa/cshen`.
 
+```
  \[/usa/cshen\]> prompt CISC361
 CISC361 \[/usa/cshen\]> \_
 CISC361 \[/usa/cshen\]> cd 361
@@ -59,6 +58,7 @@ CISC361 \[/usa/cshen/361\]> prompt YES
 YES \[/usa/cshen/361\]> prompt
   input prompt prefix: hello
 hello \[/usa/cshen/361\]> \_
+```
 
 *   **`printenv`** - Should work the same as the tcsh built-in one. When ran with no arguments prints the whole environment (This can be done in 2 lines of code, a `printf()` inside of a `while` loop, not counting a variable declaration). When ran with one argument, call `getenv(3C)` on it. When called with two or more args print the same error message to stderr that tcsh does.
 *   **`alias`** \- Should work the same as the tcsh built-in one. When ran with no arguments prints the aliases the shell knows about. When ran with arguments it should install an alias into the alias table the shell knows about. Additionally, the shell needs to be able to run your aliases to receive full credit. Supply your own test cases to show that it works.
@@ -68,9 +68,9 @@ hello \[/usa/cshen/361\]> \_
 
 #### How to get started
 
-It is recommendated to first get the loop working to find a command, i.e., implement _which_ first. Then you will be able to create a new process with `fork(2)` and use `execve(2)` in the child process and `waitpid(2)` in the parent. Then process arguments and do the other built-ins. Remember to read man pages for system and library calls, include the corresponding header files.  
+It is recommended to first get the loop working to find a command, i.e., implement _which_ first. Then you will be able to create a new process with `fork(2)` and use `execve(2)` in the child process and `waitpid(2)` in the parent. Then process arguments and do the other built-ins. Remember to read man pages for system and library calls, include the corresponding header files.  
   
-Skeleton code to get started with is [here](skeleton-code). Example code of using `fork(2)` and `exec(2)` can be found [here](sample-code).  
+Skeleton code to get started with is [here](https://www.eecis.udel.edu/~cshen/361/Proj_2/skeleton-code/). Example code of using `fork(2)` and `exec(2)` can be found [here](https://www.eecis.udel.edu/~cshen/361/Proj_2/sample-code/).  
 
 #### Some more library functions that may be helpful
 
@@ -79,7 +79,7 @@ Skeleton code to get started with is [here](skeleton-code). Example code of usin
 ### Test Runs
 
 Test your shell by running the following commands in it (in order):  
-
+```
 \[return\]
 Ctrl-D
 Ctrl-Z
@@ -157,6 +157,7 @@ setenv HOME /
 cd
 pwd
 exit
+```
 
 ### Notes
 
@@ -167,12 +168,12 @@ The next project builds upon this project. It is important to have minimal funct
 ### Extra Credits
 
 Turn your shell into one that will restrict the run time of executing processes. Your shell will execute a command as a new process, but if the process exceeds a 'timeout,' it will be killed. You will start your shell with one argument stating a timeout value. For instance,
-
+```
 $ ./myshell 5
 mysh >> cat
 !!! taking too long to execute this command !!!
 mysh >>
-
+```
 * * *
 
 ### Grading
