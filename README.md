@@ -28,11 +28,11 @@ What you need to do is to have a loop that will print a prompt (consisting of a 
 *   Obviously, you will need to do some parsing of the command line entered. A good way to do this would be to use `fgets(3C)` to read in the (entire) command line, then use `strtok(3C)` with a space as the delimiter. The first "word" will be the command (we'll ignore the possibility that a command could have a space in its name). All words after that will be arguments to be passed to the command (which you will need to put into a `char**`).
 *   After you get the command, check if it is one of your built-in commands (explained below). If it is, then run code for that.
 *   If it is not one of your built-in commands, check if it is an absolute path (a command starts with '`/`') or a path starts with '`./`', '`../`', _etc_., and run that if it is executable (use `access(2)` to check).
-*   If the command is neither of the above cases then search for the command in the search path by looping through the path stored as a linked list as given in the [skeleton code](skeleton-code/get_path.c). You may also use your own linked list code. Use `access(2)` in a loop to find the first executable in the path for the command. `snprintf(3C)` would be useful to use here (using `strcat()` has caused problems for several people).
+*   If the command is neither of the above cases then search for the command in the search path by looping through the path stored as a linked list as given in the [skeleton code](https://www.eecis.udel.edu/~cshen/361/Proj_2/skeleton-code/get_path.c). You may also use your own linked list code. Use `access(2)` in a loop to find the first executable in the path for the command. `snprintf(3C)` would be useful to use here (using `strcat()` has caused problems for several people).
 *   Once you find the command you should execute it, using `execve(2)`. You also need to have the shell do a `waitpid(2)` and print out the return status of the command if it is nonzero like `tcsh` does when the `printexitvalue` shell variable is set. Look into using the WEXITSTATUS macro from [<sys/wait.h>](http://pubs.opengroup.org/onlinepubs/9699919799/functions/wait.html).
 *   Before executing a command your shell should also print out what it is about to execute. (i.e. print "Executing \[_pathname_\]"; for built-ins print "Executing built-in \[_built-in command name_\]")
-*   Ctrl-C (SIGINT) should be caught and ignored if the shell is prompting for a command, but sent to the running child process otherwise. Use `signal(3C)` and/or `sigset(3C)` for this. Ctrl-Z (SIGTSTP), and SIGTERM should be ignored using `sigignore(3C)` or `signal(3C)`. Note that when you are running a command inside your shell and press control-C, signal SIGINT is sent to both your shell process and the running command process (_i.e._, all the processes in the _foreground_ process group). (Review Sections 9.4 (Process Groups), 9.5 (Sessions), and 9.6 (Controlling Terminal) of Stevens and Rago's [ebook](http://proquestcombo.safaribooksonline.com/book/programming/unix/9780321638014) for details.)
-*   You need to support the `*` wildcard character when a single `*` is given. You do not need to handle the situation when `*` is given with a `/` in the string (i.e., /usr/include/\*.h). This should work just like it does in csh/tcsh when noglob is not set. You need only to support the possibility of one `*` on your commandline, but it could have chars prepended and/or appended. (i.e., `ls *` should work correctly as should `ls *.c`, `ls s*` and `ls p*.txt`.) Be sure to document how you do this. Hint: implement the `list` built-in command explained below before attempting this. You may use `glob(3C)` if you wish. Note that it is YOUR shell's responsibility to expands wildcards to matching (file) names. (If there were not matches, the "original" arguments are passed to `execve()`.)
+*   Ctrl-C (SIGINT) should be caught and ignored if the shell is prompting for a command, but sent to the running child process otherwise. Use `signal(3C)` and/or `sigset(3C)` for this. Ctrl-Z (SIGTSTP), and SIGTERM should be ignored using `sigignore(3C)` or `signal(3C)`. **Note that when you are running a command inside your shell and press control-C, signal SIGINT is sent to both your shell process and the running command process (_i.e._, all the processes in the _foreground_ process group)**. (Review Sections 9.4 (Process Groups), 9.5 (Sessions), and 9.6 (Controlling Terminal) of Stevens and Rago's [ebook](http://proquestcombo.safaribooksonline.com/book/programming/unix/9780321638014) for details.)
+*   You need to support the `*` wildcard character when a single `*` is given. You do not need to handle the situation when `*` is given with a `/` in the string (i.e., /usr/include/\*.h). This should work just like it does in csh/tcsh when noglob is not set. You need only to support the possibility of one `*` on your commandline, but it could have chars prepended and/or appended. (i.e., `ls *` should work correctly as should `ls *.c`, `ls s*` and `ls p*.txt`.) Be sure to document how you do this. Hint: implement the `list` built-in command explained below before attempting this. You may use `glob(3C)` if you wish. **Note that it is YOUR shell's responsibility to expands wildcards to matching (file) names. (If there were not matches, the "original" arguments are passed to `execve()`.)**
 *   You also need to support the `?` wildcard character which should match any single character (exactly one character match) in a filename (anywhere in the filename). The `*` and `?` should also work together.
 *   Your code should do proper error checking. Again check man pages for error conditions, and call `perror(3C)` as needed. Also avoid memory leaks by calling `free(3C)` as needed.
 *   Your shell should treat Ctrl-D and the [EOF](http://www.computerhope.com/jargon/e/eof.htm) char in a similar way csh/tcsh do when the `ignoreeof` [tcsh shell variable](http://www.ibm.com/developerworks/aix/library/au-tcsh/) is set, that is ignore it, instead of exiting or seg faulting. Note that Ctrl-D is not a signal, but the EOF char.
@@ -74,7 +74,7 @@ Skeleton code to get started with is [here](https://www.eecis.udel.edu/~cshen/36
 
 #### Some more library functions that may be helpful
 
-`atoi(3C), fprintf(3C), index(3C), calloc(3C), malloc(3C), memcpy(3C), memset(3C), getcwd(3C), strncmp(3C), strlen(3C).`
+`atoi(3C)`, `fprintf(3C)`, `index(3C)`, `calloc(3C)`, `malloc(3C)`, `memcpy(3C)`, `memset(3C)`, `getcwd(3C)`, `strncmp(3C)`, `strlen(3C)`.
 
 ### Test Runs
 
@@ -168,17 +168,21 @@ The next project builds upon this project. It is important to have minimal funct
 ### Extra Credits
 
 Turn your shell into one that will restrict the run time of executing processes. Your shell will execute a command as a new process, but if the process exceeds a 'timeout,' it will be killed. You will start your shell with one argument stating a timeout value. For instance,
+
 ```
 $ ./myshell 5
 mysh >> cat
 !!! taking too long to execute this command !!!
 mysh >>
 ```
+
+**You may NOT use multi-threading to implement this feature.**
+
 * * *
 
 ### Grading
 
-*   90% correctly working shell ([checklist](checklist.html))
+*   90% correctly working shell ([checklist](https://www.eecis.udel.edu/~cshen/361/Proj_2/checklist.html))
 *   10% documentation and code structure (remember to check error situations and avoid too much duplicate code)
 
 ### Turn In
@@ -186,9 +190,9 @@ mysh >>
 You need to tar up your source code, test run script file, etc. To do this, do the following.
 
 *   In the current working directory, create a (sub-)directory named `proj2` to store all your programs.
-*   tar cvf YourName\_proj2.tar proj2
+*   `tar cvf YourName\_proj2.tar proj2`
     
 
 To verify that your files are in the tar file take a look at the table of contents of the tar file like:
 
-tar tvf YourName\_proj2.tar
+`tar tvf YourName\_proj2.tar`
