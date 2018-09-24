@@ -11,7 +11,13 @@
 #include <signal.h>
 #include "sh.h"
 
+#define MAX_CANON 32
+#define PATH_MAX 32
+#define BUFFER_SIZE 100
+
 int sh(int argc, char **argv, char **envp) {
+    char BUFFER [BUFFER_SIZE];
+
     char *prompt = calloc(PROMPTMAX, sizeof(char));
     char *commandline = calloc(MAX_CANON, sizeof(char));
     char *command, *arg, *commandpath, *p, *pwd, *owd;
@@ -26,7 +32,7 @@ int sh(int argc, char **argv, char **envp) {
     homedir = password_entry->pw_dir;        /* Home directory to start
 						  out with*/
 
-    if ((pwd = getcwd(NULL, PATH_MAX + 1)) == NULL) {
+    if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
         perror("getcwd");
         exit(2);
     }
@@ -38,21 +44,25 @@ int sh(int argc, char **argv, char **envp) {
     /* Put PATH into a linked list */
     pathlist = get_path();
 
+    
+    char prompt_char[BUFFER_SIZE] = "[🔥 🔥 🔥] >";
     while (go) {
         /* print your prompt */
+        printf("%s", prompt_char);
+        fgets(BUFFER, BUFFER_SIZE, stdin);
 
         /* get command line and process */
 
         /* check for each built in command and implement */
 
         /*  else  program to exec */
-        {
+        //{
             /* find it */
             /* do fork(), execve() and waitpid() */
 
-            else
-            fprintf(stderr, "%s: Command not found.\n", args[0]);
-        }
+        //    else
+        //    fprintf(stderr, "%s: Command not found.\n", args[0]);
+        //}
     }
     return 0;
 } /* sh() */
