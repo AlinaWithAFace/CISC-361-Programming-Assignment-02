@@ -17,7 +17,7 @@ The objectives of this project are to learn how a Unix shell works, to write a s
 
 ### The Assignment
 
-You will write a simple shell in C with some "built-in" commands.  
+You will write a simple shell in C with some "built-in" commands.
 
 #### Overview
 
@@ -191,8 +191,86 @@ You need to tar up your source code, test run script file, etc. To do this, do t
 
 *   In the current working directory, create a (sub-)directory named `proj2` to store all your programs.
 *   `tar cvf YourName\_proj2.tar proj2`
-    
 
 To verify that your files are in the tar file take a look at the table of contents of the tar file like:
 
 `tar tvf YourName\_proj2.tar`
+
+
+### Checklist
+CISC361-010 Project 1 Checklist
+**Name:___________________________________________ Grade:__________/100**  
+  
+____/90 correctly working shell, ____/10 documentation + code structure  
+  
+
+#### Project 1 -- Working of the shell breakdown (85 pts)
+
+*   ___/0 setting up path in a linked list
+*   ___/15 parsing of command line (with fgets() and strtok()) and executing command
+
+*   getting command and setting up an argv for execve()
+*   checking for builtin command, absolute path, searching PATH, running correctly
+*   proper use of fork(), execve(), waitpid()
+
+*   ___/2 checking that file is executable with access() before executing
+*   ___/4 properly working which command, traverses linked list for path
+*   ___/3 properly working where command, again travese linked list
+*   ___/4 properly working cd command, with error checking
+
+*   chdir to dir given, error is dir nonexistant, etc.
+*   going to homedir with no args
+*   'cd -' feature
+
+*   ___/4 list command (proper use of opendir() and readdir())
+
+*   list current dir with no args
+*   list a given dir(s)
+
+*   ___/1 exit command
+*   ___/4 kill and pid commands
+
+*   kill works to send a default signal to a process
+*   kill works to send any signal to a process
+
+*   ___/2 prompt command, with an argument and without
+*   ___/1 displaying the prompt correctly with prefix and cwd
+*   ___/1 pwd command
+*   ___/4 printenv command  
+    *   show all of environment with no arg
+    *   show just one variable
+    *   error conditions
+*   ___/3 setenv command
+
+*   with no args prints environment
+*   sets the variable correctly with one or two args
+*   Shell works correctly after updating PATH and HOME
+
+*   ___/1 printing of return status if command exited with a nonzero value
+*   ___/1 printing out of command to execute
+*   ___/5 handling of Ctrl-C(SIGINT) and sending to child process with signal handler
+*   ___/2 ignoring SIGTERM and (Ctrl-Z)SIGTSTP
+*   ___/4 Doesn't segfault, specifically when:
+
+*   Ctrl-D is given to command line prompt
+*   Ctrl-C (SIGINT) is given to command line prompt
+*   When enter (return) is given to command line prompt
+
+*   ___/5 The \* wildcard implemented correctly
+
+*   Works with \* by itself
+*   Works with chars prepended (s\*)
+*   Works with chars appended (\*.c)
+*   Works with chars prepended and appended (s\*.c)
+*   Works to match zero chars (s\*h.c matches sh.c)
+
+*   ___/3 The ? wildcard implemented correctly
+*   Works with a single ? anywhere
+*   Works with a multiple ?s anywhere
+*   Works when used with \* as well anywhere
+
+*   ___/5 alias and alias execution
+*   ___/5 history command
+*   ___/5 **error checking of system call return values and using perror() in error situations**
+*   ___/6 test runs
+*   ___/5 **Extra Credit** - TBA
