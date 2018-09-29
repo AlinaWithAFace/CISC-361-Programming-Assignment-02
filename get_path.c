@@ -22,6 +22,8 @@ struct pathelement *get_path() {
     strncpy(path, p, strlen(p));
     path[strlen(p)] = '\0';
 
+    //printf("%s", path);
+
     p = strtok(path, ":");    /* PATH is : delimited */
     do                /* loop through the PATH */
     {                /* to build a linked list of dirs */
