@@ -12,7 +12,7 @@
 #include <errno.h>
 #include "sh.h"
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 1000
 
 void do_nothing_handler(int sig){
     //printf("Caught signal %d\n", sig);
@@ -227,9 +227,10 @@ int sh(int argc, char **argv, char **envp) {
                     //get rid of the - flag
                     signal_str[0] = ' ';
                     sig_num = strtol(signal_str, &end, 10);
+                    
                     if(end==signal_str){
                         printf("%s\n", "Cannot convert string to number");
-                    
+
                     }
 
                     int id = (int)pid_num;
@@ -266,22 +267,28 @@ int sh(int argc, char **argv, char **envp) {
                     strcpy(prompt_prefix, args[1]);
                 }
             }else if(strcmp(args[0], "printenv") == 0){
-                if(num_args == 1){    
-                    int i = 0;
-                    while(envp[i] != NULL){
-                        printf("%s\n", envp[i]);
-                        i++;
-                    }
-                }else if(num_args == 2){
-                    printf("%s\n", getenv(args[1]));
-                }
+                printenv(num_args, envp, args);
 
             }else if(strcmp(args[0], "alias") == 0){
 
             }else if(strcmp(args[0], "history") == 0){
 
             }else if(strcmp(args[0], "setenv") == 0){
+                if(num_args == 1){
+                    printenv(num_args, envp, args);
+                }else if(num_args == 2){
+                    setenv(args[1],"",1);
+                }else if(num_args == 3){
+                    setenv(args[1],args[2],1);
 
+                    if(strcmp(args[1], "HOME") == 0){
+                        homedir = getenv("HOME");
+                    }else if(strcmp(args[1], "PATH") == 0){
+                        pathlist = get_path();
+                    }
+                }else{
+                    printf("%s\n", "setenv: Incorrect amount of arguments");
+                }
             }else{
                 //We assume the user wants to run an actual commad
             }
@@ -324,8 +331,24 @@ int sh(int argc, char **argv, char **envp) {
     return 0;
 } /* sh() */
 
+void printenv(int num_args, char** envp, char** args){
+    if(num_args == 1){    
+        int i = 0;
+        while(envp[i] != NULL){
+            printf("%s\n", envp[i]);
+            i++;
+        }
+    }else if(num_args == 2){
+        //printf("%s", args[1]);
+        char* env_str = getenv(args[1]);
+        if(env_str != NULL){
+            printf("%s\n",env_str);
+        }
+    }
+}
 
 
+//TODO: Which and where probably crash on invalid path
 char *which(char *command, struct pathelement *pathlist) {
     //printf("%s\n",command);
     /* loop through pathlist until finding command and return it.  Return
