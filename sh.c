@@ -71,7 +71,7 @@ int sh(int argc, char **argv, char **envp) {
         fgets(BUFFER, BUFFER_SIZE, stdin);
         len = (int)strlen(BUFFER);
 
-        //Empty input has lenght of 1
+        //Empty input has length of 1
         if(len >= 2){
             BUFFER[len-1] = '\0';
             string_input = (char*)malloc(len);
@@ -79,6 +79,8 @@ int sh(int argc, char **argv, char **envp) {
             
             char* token = strtok(string_input, " ");
             int i = 0;
+
+            //TODO: IMPLEMENT * and ? support
             
             while(token){
                 len = (int)strlen(token);
@@ -94,28 +96,44 @@ int sh(int argc, char **argv, char **envp) {
                 if(args[1] == NULL){
                     printf("%s", "which: Too few arguments.\n");
                 }else{
-                    //TODO Impelemnt multiple args
-                    char* result = which(args[1], pathlist);
-                    if(result != NULL){
-                        printf("%s\n", result);
-                        free(result);
-                    }else{
-                        printf("%s not found\n", args[1]);
+
+                    //Iterate though all following args
+                    for(int i=1; i < MAXARGS; i++){
+                        if(args[i] != NULL){
+                            char* result = which(args[i], pathlist);
+                            if(result != NULL){
+                                printf("%s\n", result);
+                                free(result);
+                            }else{
+                                printf("%s not found\n", args[i]);
+                            }
+                        }else{
+                            break;
+                        }
                     }
+                    
                 }
             }else if(strcmp(args[0], "where") == 0){
                 if(args[1] == NULL){
                     printf("%s", "where: Too few arguments.\n");
                 }else{
                     //TODO Impelemnt multiple args
-                    char* result = where(args[1], pathlist);
-                    if(result != NULL){
-                        printf("%s\n", result);
-                        free(result);
-                    }else{
-                        printf("%s not found\n", args[1]);
+                    for(int i=1; i < MAXARGS; i++){
+                        if(args[i] != NULL){
+                            char* result = where(args[i], pathlist);
+                            if(result != NULL){
+                                printf("%s\n", result);
+                                free(result);
+                            }else{
+                                printf("%s not found\n", args[i]);
+                            }
+                        }else{
+                            break;
+                        }
                     }
                 }
+
+            //CD 100%
             }else if(strcmp(args[0], "cd") == 0){
                 if(args[1] == NULL){
                     printf("%s","cd: Too few arguments.\n");
