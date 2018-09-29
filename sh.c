@@ -62,6 +62,8 @@ int sh(int argc, char **argv, char **envp) {
     signal(SIGTERM, do_nothing_handler);
     signal(SIGTSTP, do_nothing_handler);
 
+
+    //TODO ADD STUFF FOR NOT HVING CORRECT AMOUNT OF ARGUMENTS
     while (go) {
         /* print your prompt */
         
@@ -78,17 +80,19 @@ int sh(int argc, char **argv, char **envp) {
             strcpy(string_input, BUFFER);
             
             char* token = strtok(string_input, " ");
-            int i = 0;
+            int num_args = 0;
 
             //TODO: IMPLEMENT * and ? support
             
             while(token){
                 len = (int)strlen(token);
-                args[i] = (char*)malloc(len);
-                strcpy(args[i], token);
+                args[num_args] = (char*)malloc(len);
+                strcpy(args[num_args], token);
                 token = strtok(NULL," ");
-                i++;
+                num_args++;
             }
+
+            //How many things were in the toke 
 
             if(strcmp(args[0], "exit") == 0){
                 go = 0;
@@ -110,6 +114,7 @@ int sh(int argc, char **argv, char **envp) {
                         }else{
                             break;
                         }
+            num_args-=1;
                     }
                     
                 }
@@ -180,8 +185,44 @@ int sh(int argc, char **argv, char **envp) {
                         }
                         
                 }
+            }else if(strcmp(args[0], "pwd") == 0){
+                printf("%s\n", cwd);
             }else if(strcmp(args[0], "list") == 0){
                 list(cwd);
+            }else if(strcmp(args[0], "pid") == 0){
+                int pid = getpid();
+                printf("%d\n", pid);
+            }else if(strcmp(args[0], "kill") == 0){
+                //printf("%d", num_args);
+                if(num_args == 3){
+                    //TODO Finish this
+                    //atoi(args[2])
+                }else if(num_args == 2){
+                    char* pid_str = args[1];
+                    char *end;
+                    long num;
+                    num = strtol(pid_str, &end, 10);
+                    if(end==pid_str){
+                        printf("%s\n", "Cannot convert string to number");
+                    }
+                    int id = (int)num;
+                    kill(id, SIGTERM);
+                    //printf("%d\n", id);
+                }else{
+                    printf("%s", "kill: Too many arguments");
+                }
+            }else if(strcmp(args[0], "prompt") == 0){
+
+            }else if(strcmp(args[0], "printenv") == 0){
+
+            }else if(strcmp(args[0], "alias") == 0){
+
+            }else if(strcmp(args[0], "history") == 0){
+
+            }else if(strcmp(args[0], "setenv") == 0){
+
+            }else{
+                //We assume the user wants to run an actual commad
             }
 
             free(token);
