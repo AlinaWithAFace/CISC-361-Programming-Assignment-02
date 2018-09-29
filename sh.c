@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <errno.h>
 #include "sh.h"
 
 #define BUFFER_SIZE 100
@@ -24,7 +25,7 @@ int sh(int argc, char **argv, char **envp) {
 
     char *prompt = calloc(PROMPTMAX, sizeof(char));
     //char *commandline = calloc(MAX_CANON, sizeof(char));
-    char *command, *arg, *commandpath, *p, *pwd, *owd;
+    char *command, *arg, *commandpath, *p, *pwd, *owd, *cwd;
     char **args = calloc(MAXARGS, sizeof(char *));
     int uid, i, status, argsct, go = 1;
     struct passwd *password_entry;
@@ -40,8 +41,10 @@ int sh(int argc, char **argv, char **envp) {
         perror("getcwd");
         exit(2);
     }
+    cwd = calloc(strlen(pwd) + 1, sizeof(char));
     owd = calloc(strlen(pwd) + 1, sizeof(char));
     memcpy(owd, pwd, strlen(pwd));
+    memcpy(cwd, pwd, strlen(pwd));
     prompt[0] = ' ';
     prompt[1] = '\0';
     
@@ -61,7 +64,9 @@ int sh(int argc, char **argv, char **envp) {
 
     while (go) {
         /* print your prompt */
-        printf("[%s]>", owd);
+        
+
+        printf("[%s]>", cwd);
         
         fgets(BUFFER, BUFFER_SIZE, stdin);
         len = (int)strlen(BUFFER);
@@ -71,10 +76,6 @@ int sh(int argc, char **argv, char **envp) {
             BUFFER[len-1] = '\0';
             string_input = (char*)malloc(len);
             strcpy(string_input, BUFFER);
-
-
-            //TODO DOESN"T FREE ARGS?
-            //printf("%s", string_input);
             
             char* token = strtok(string_input, " ");
             int i = 0;
@@ -119,12 +120,50 @@ int sh(int argc, char **argv, char **envp) {
                 if(args[1] == NULL){
                     printf("%s","cd: Too few arguments.\n");
                 }else{
-                    free(owd);
-                    owd = calloc((int)strlen(args[1]), sizeof(char));
-                    strcpy(owd,args[1]);
+                        char* cd_path = args[1];
+                        //printf(cd_path);
+
+                        //get the current working directory
+                        if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
+                                perror("getcwd");
+                                exit(2);
+                        }
+
+                        if(cd_path[0]=='-'){
+                            if(chdir(owd) < 0){
+                                printf("Invalid Directory: %d\n", errno);
+                            }else{
+                                free(cwd);
+                                cwd = malloc((int)strlen(owd));
+                                strcpy(cwd, owd);
+
+                            
+                                free(owd);
+                                owd = malloc((int)strlen(BUFFER));
+                                strcpy(owd, BUFFER);
+                            }
+                        }else{
+                            if(chdir(cd_path) < 0){
+                                printf("Invalid Directory: %d\n", errno);
+                            }else{
+                                free(owd);
+                                owd = malloc((int)strlen(BUFFER));
+                                strcpy(owd, BUFFER);
+
+                                if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
+                                    perror("getcwd");
+                                    exit(2);
+                                }
+
+                                free(cwd);
+                                cwd = malloc((int)strlen(BUFFER));
+                                strcpy(cwd, BUFFER);
+                            }
+                        }
+                        
                 }
             }else if(strcmp(args[0], "list") == 0){
-                list(owd);
+                list(cwd);
             }
 
             free(token);
@@ -146,6 +185,7 @@ int sh(int argc, char **argv, char **envp) {
 
     free(prompt);
     free(owd);
+    free(cwd);
     free(args);
 
     struct pathelement *current;
@@ -264,6 +304,12 @@ char *where(char *command, struct pathelement *pathlist) {
     return p;
 } /* where() */
 
+
+//TODO fix bad dirs
+
+//No args, list file in the current working directory
+//Wirth args, lists file in each directory given as an argument
+//with blank line then the name od 
 void list(char *dir) {
 
     DIR *dr;
