@@ -17,6 +17,8 @@ void do_nothing_handler(int sig){
     //printf("Caught signal %d\n", sig);
 }
 
+//TODO Implement error checking
+
 int sh(int argc, char **argv, char **envp) {
     char BUFFER [BUFFER_SIZE];
 
@@ -43,11 +45,12 @@ int sh(int argc, char **argv, char **envp) {
     prompt[0] = ' ';
     prompt[1] = '\0';
     
+    //printf("%s", owd);
 
     /* Put PATH into a linked list */
     pathlist = get_path();
     
-    char prompt_char[BUFFER_SIZE] = "[🔥 👉 😎 👉 🔥] >";
+    //char prompt_char[BUFFER_SIZE] = sprintf("[%s]>", owd);
     int len;
     char* string_input;
 
@@ -58,21 +61,24 @@ int sh(int argc, char **argv, char **envp) {
 
     while (go) {
         /* print your prompt */
-        //todo, fix memory and garbage stuff
-
-        //TODO: breaks when you input nothing 
-        printf("%s", prompt_char);
+        printf("[%s]>", owd);
         
         fgets(BUFFER, BUFFER_SIZE, stdin);
         len = (int)strlen(BUFFER);
 
-        BUFFER[len-1] = '\0';
-        string_input = (char*)malloc(len);
-        strcpy(string_input, BUFFER);
+        //Empty input has lenght of 1
+        if(len >= 2){
+            BUFFER[len-1] = '\0';
+            string_input = (char*)malloc(len);
+            strcpy(string_input, BUFFER);
 
-        if(string_input != NULL){
+
+            //TODO DOESN"T FREE ARGS?
+            //printf("%s", string_input);
+            
             char* token = strtok(string_input, " ");
             int i = 0;
+            
             while(token){
                 len = (int)strlen(token);
                 args[i] = (char*)malloc(len);
@@ -96,14 +102,44 @@ int sh(int argc, char **argv, char **envp) {
                         printf("%s not found\n", args[1]);
                     }
                 }
+            }else if(strcmp(args[0], "where") == 0){
+                if(args[1] == NULL){
+                    printf("%s", "where: Too few arguments.\n");
+                }else{
+                    //TODO Impelemnt multiple args
+                    char* result = where(args[1], pathlist);
+                    if(result != NULL){
+                        printf("%s\n", result);
+                        free(result);
+                    }else{
+                        printf("%s not found\n", args[1]);
+                    }
+                }
+            }else if(strcmp(args[0], "cd") == 0){
+                if(args[1] == NULL){
+                    printf("%s","cd: Too few arguments.\n");
+                }else{
+                    free(owd);
+                    owd = calloc((int)strlen(args[1]), sizeof(char));
+                    strcpy(owd,args[1]);
+                }
+            }else if(strcmp(args[0], "list") == 0){
+                list(owd);
             }
+
             free(token);
+
+            for(int j = 0;j<MAXARGS;j++){
+                free(args[j]);
+
+                //Null out the args
+                args[j] = NULL;
+            }
+
+            free(string_input);
         }
 
-        for(i=0;i<MAXARGS;i++){
-            free(args[i]);
-        }
-        free(string_input);
+        
     }
 
     //Free ALL the things!
@@ -130,6 +166,7 @@ int sh(int argc, char **argv, char **envp) {
 
 
 char *which(char *command, struct pathelement *pathlist) {
+    //printf("%s\n",command);
     /* loop through pathlist until finding command and return it.  Return
     NULL when not found. */
 
@@ -183,10 +220,63 @@ char *which(char *command, struct pathelement *pathlist) {
 }
 
 char *where(char *command, struct pathelement *pathlist) {
-    /* similarly loop through finding all locations of command */
+    char CAT_BUFFER[BUFFER_SIZE];
+    struct pathelement* current = pathlist;
+
+    DIR *dr;
+    struct dirent *de; 
+    strcpy(CAT_BUFFER,"");
+    
+    //Go though all our PATH_ENVs
+    while(current != NULL){
+        
+        char* path = current->element;
+
+        //vars for looking though the directories
+        dr = opendir(path);
+       // printf("Dir closed");
+
+        //in each path, look at all of it's files
+        while((de = readdir(dr)) != NULL){
+
+           
+            //for each file in the directory, check if it's the one we want
+            if(strcmp(de->d_name, command) == 0){
+                //If it is add it to the buffer
+                strcat(CAT_BUFFER, path);
+                strcat(CAT_BUFFER, "/");
+                strcat(CAT_BUFFER, de->d_name);
+                strcat(CAT_BUFFER,"\n");
+            }
+        }
+        closedir(dr);
+
+        current=current->next;
+    }
+ 
+    int len = (int)strlen(CAT_BUFFER);
+    char* p = (char*)malloc(len);
+
+    //replace last '\n' with null terminator
+    CAT_BUFFER[len-1]='\0';
+    strcpy(p, CAT_BUFFER);
+
+    return p;
 } /* where() */
 
 void list(char *dir) {
+
+    DIR *dr;
+    struct dirent *de;
+
+    dr = opendir(dir);
+
+    while((de = readdir(dr)) != NULL){
+
+            printf("%s\n", de->d_name);
+    }
+
+    closedir(dr);
     /* see man page for opendir() and readdir() and print out filenames for
     the directory passed */
 } /* list() */
