@@ -290,6 +290,22 @@ int sh(int argc, char **argv, char **envp) {
                     printf("%s\n", "setenv: Incorrect amount of arguments");
                 }
             }else{
+                char* cmd_path = which(args[0], pathlist);
+                
+                pid_t child_pid = fork();
+                //printf("%d", child_pid)
+
+                if(child_pid == 0){
+                    int ret = execve(cmd_path, argv, envp);
+                }
+
+                int child_status;
+
+                waitpid(child_pid, &child_status, 0);
+                
+                 //printf("%d", ret);
+                //execve()
+                
                 //We assume the user wants to run an actual commad
             }
 
