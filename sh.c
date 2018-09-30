@@ -301,7 +301,7 @@ int sh(int argc, char **argv, char **envp) {
                 //printf("%d", child_pid)
 
                     if(child_pid == 0){
-                        int ret = execve(cmd_path, argv, envp);
+                        int ret = execve(cmd_path, args, envp);
                     }
 
                     int child_status;
