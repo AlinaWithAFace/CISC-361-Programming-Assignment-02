@@ -290,18 +290,29 @@ int sh(int argc, char **argv, char **envp) {
                     printf("%s\n", "setenv: Incorrect amount of arguments");
                 }
             }else{
+                //DO strict checking TODO
+
                 char* cmd_path = which(args[0], pathlist);
                 
-                pid_t child_pid = fork();
+                //If the command exits
+                if(cmd_path != NULL){
+                    printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
+                    pid_t child_pid = fork();
                 //printf("%d", child_pid)
 
-                if(child_pid == 0){
-                    int ret = execve(cmd_path, argv, envp);
+                    if(child_pid == 0){
+                        int ret = execve(cmd_path, argv, envp);
+                    }
+
+                    int child_status;
+
+                    waitpid(child_pid, &child_status, 0);
+                    free(cmd_path);
+                }else{
+                    printf("%s: Command not found\n", args[0]);
                 }
 
-                int child_status;
-
-                waitpid(child_pid, &child_status, 0);
+                
                 
                  //printf("%d", ret);
                 //execve()
@@ -313,7 +324,6 @@ int sh(int argc, char **argv, char **envp) {
 
             for(int j = 0;j<MAXARGS;j++){
                 free(args[j]);
-
                 //Null out the args
                 args[j] = NULL;
             }
