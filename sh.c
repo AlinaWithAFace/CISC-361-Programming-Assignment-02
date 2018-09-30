@@ -91,7 +91,7 @@ int sh(int argc, char **argv, char **envp) {
             strcpy(string_input, BUFFER);
 
             //printf("HSHSHSHS\n");
-            //history = append(history, string_input);
+            history = append(history, string_input);
             //traverse(history);
 
             //int y = 3;
@@ -320,10 +320,31 @@ int sh(int argc, char **argv, char **envp) {
                 printenv(num_args, envp, args);
 
             }else if(strcmp(args[0], "alias") == 0){
+                if(num_args == 1){
+
+                }else if(num_args == 2){
+
+                }else{
+                    
+                }
+                
 
             }else if(strcmp(args[0], "history") == 0){
-                //printf("%s\n", history->next->data);
-                //traverse(history);
+                if(num_args == 2){
+                    char* args_str = args[1];
+                    long args_num;
+                    char* end;
+
+                    args_num = strtol(args_str, &end, 10);
+                    if(end==args_str){
+                        printf("%s\n", "Cannot convert string to number");
+                    }else{
+                        int arg_int = (int)args_num;
+                        traverse(history, arg_int);
+                    }
+                }else{
+                    printf("%s\n", "history: Invalid number of arguments");
+                }
             }else if(strcmp(args[0], "setenv") == 0){
                 if(num_args == 1){
                     printenv(num_args, envp, args);
@@ -341,9 +362,7 @@ int sh(int argc, char **argv, char **envp) {
                     printf("%s\n", "setenv: Incorrect amount of arguments");
                 }
             }else{
-                //DO strict checking TODO
                 char* cmd_path;
-                int x =9;
 
                 //Check to see if we are an aboslute
                 if(args[0][0]=='.' || args[0][0]=='/'){
@@ -396,7 +415,8 @@ int sh(int argc, char **argv, char **envp) {
 
     //Free ALL the things!
 
-    printf("M");
+    freeAll(history);
+    freeAll(alias);
     free(prompt);
     free(owd);
     free(cwd);

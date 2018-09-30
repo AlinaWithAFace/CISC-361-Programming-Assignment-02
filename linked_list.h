@@ -6,7 +6,7 @@ struct Node
 
 struct Node* append(struct Node*, char*);
 
-void traverse(struct Node*);
+void traverse(struct Node*, int num);
 
 int find(struct Node*, char* );
 

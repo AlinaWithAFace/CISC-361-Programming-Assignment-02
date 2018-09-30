@@ -7,8 +7,6 @@
 #include "linked_list.h"
 
 struct Node* append(struct Node* head, char* str){
-    //printf("%s\n","GARBAGE");
-    
     struct Node* current = head;
     
 
@@ -19,11 +17,10 @@ struct Node* append(struct Node* head, char* str){
     }
 
     struct Node* new = (struct Node*)malloc(sizeof(struct Node));
-    //string_input = (char*)malloc(len);
     new->data = (char*)malloc(strlen(str));
+    new->next = NULL;
     strcpy(new->data, str);
 
-    //printf("FFFF");
     if(head != NULL){
         current->next = new;
     }else{
@@ -33,14 +30,22 @@ struct Node* append(struct Node* head, char* str){
     return head;
 }
 
-void traverse(struct Node* head){
+void traverse(struct Node* head, int num){
     struct Node* current = head;
+    int i = 0;
 
-    //printf("%s\n", "WORKWORK");
-    //printf("%s\n", "TRAVERSE");
-    while(current != NULL){
-        printf("%s\n", current->data);
-        current = current->next;
+    if(i == 0){
+        while(current != NULL){
+            printf("%s\n", current->data);
+            current = current->next;
+            i++;
+        }
+    }else{
+        while(current != NULL && i < num){
+            printf("%s\n", current->data);
+            current = current->next;
+            i++;
+        }
     }
 }
 
@@ -65,8 +70,6 @@ void update(struct Node* head, char* old_str, char* new_str){
 
 void freeAll(struct Node* head){
     struct Node* current = head;
-    printf("%s\n", current->data);
-    free(current->data);
     while(current != NULL){
         struct Node* toDelete = current;
         //printf("%s\n", toDelete->data);
