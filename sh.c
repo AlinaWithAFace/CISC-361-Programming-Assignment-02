@@ -12,8 +12,10 @@
 #include <errno.h>
 #include "sh.h"
 #include <glob.h>
+#include "linked_list.h"
 
 #define BUFFER_SIZE 1000
+#define MAX_ALIAS 10
 
 void do_nothing_handler(int sig){
     //printf("Caught signal %d\n", sig);
@@ -28,6 +30,11 @@ int sh(int argc, char **argv, char **envp) {
     //char *commandline = calloc(MAX_CANON, sizeof(char));
     char *command, *arg, *commandpath, *p, *pwd, *owd, *cwd;
     char **args = calloc(MAXARGS, sizeof(char *));
+
+    struct Node* history = NULL;
+    struct Node* alias = NULL;
+    //char **alias = calloc()
+
     int uid, i, status, argsct, go = 1;
     struct passwd *password_entry;
     char *homedir;
@@ -75,18 +82,25 @@ int sh(int argc, char **argv, char **envp) {
         
         fgets(BUFFER, BUFFER_SIZE, stdin);
         len = (int)strlen(BUFFER);
-
         //Empty input has length of 1
         if(len >= 2){
             BUFFER[len-1] = '\0';
             string_input = (char*)malloc(len);
+
+            
             strcpy(string_input, BUFFER);
+
+            //printf("HSHSHSHS\n");
+            //history = append(history, string_input);
+            //traverse(history);
+
+            //int y = 3;
             
             char* token = strtok(string_input, " ");
             int num_args = 0;
 
             //TODO: IMPLEMENT * and ? support
-            //GLOB EXPANSION
+            //GLOB EXPANSIONcmd_path
 
 
             while(token){
@@ -308,7 +322,8 @@ int sh(int argc, char **argv, char **envp) {
             }else if(strcmp(args[0], "alias") == 0){
 
             }else if(strcmp(args[0], "history") == 0){
-
+                //printf("%s\n", history->next->data);
+                //traverse(history);
             }else if(strcmp(args[0], "setenv") == 0){
                 if(num_args == 1){
                     printenv(num_args, envp, args);
@@ -328,6 +343,7 @@ int sh(int argc, char **argv, char **envp) {
             }else{
                 //DO strict checking TODO
                 char* cmd_path;
+                int x =9;
 
                 //Check to see if we are an aboslute
                 if(args[0][0]=='.' || args[0][0]=='/'){
@@ -349,7 +365,7 @@ int sh(int argc, char **argv, char **envp) {
 
                     int child_status;
 
-                    alarm(5);
+                   // alarm(5);
                     waitpid(child_pid, &child_status, 0);
                     free(cmd_path);
                 }else{
@@ -380,6 +396,7 @@ int sh(int argc, char **argv, char **envp) {
 
     //Free ALL the things!
 
+    printf("M");
     free(prompt);
     free(owd);
     free(cwd);
