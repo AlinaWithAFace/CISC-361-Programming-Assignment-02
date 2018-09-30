@@ -134,6 +134,10 @@ int sh(int argc, char **argv, char **envp) {
 
             //How many things were in the toke
 
+
+
+
+
             typedef enum commands {
                 EXIT, WHICH, WHERE, CD, GET_CWD, PWD, LIST, PID, KILL, PROMPT, PRINT_ENV, ALIAS, HISTORY, SET_ENV, command_count
             } commands;
@@ -147,11 +151,20 @@ int sh(int argc, char **argv, char **envp) {
 
             for (command_string_index = 0; command_string_index < command_count; ++command_string_index) {
                 if(strcmp(args[0], command_strings[command_string_index]) == 0){
-                    printf("Matched %s\n", command_strings[command_string_index]);
+                    //printf("Matched %s\n", command_strings[command_string_index]);
                     break;
                 }
             }
-            printf("broke out of for loop with command index %d\n", command_string_index);
+
+
+//            printf("broke out of for loop with command index %d\n", command_string_index);
+//            printf(command_strings[command_string_index]);
+//
+//            if (NULL == command_strings[command_string_index]) {
+//                printf("Not found?");
+//            } else {
+//                printf("Interpreted as %s\n", command_strings[command_string_index]);
+//            }
 
             switch (command_string_index){
                 case EXIT:
@@ -204,6 +217,7 @@ int sh(int argc, char **argv, char **envp) {
                     break;
                 case CD:
 
+                    printf("");
                     char* cd_path = args[1];
 
                     if(num_args == 1){
@@ -254,14 +268,13 @@ int sh(int argc, char **argv, char **envp) {
 
 
                     break;
-                case GETCWD:
+                case GET_CWD:
+                    //todo
                     break;
                 case PWD:
                     printf("%s\n", cwd);
                     break;
                 case LIST:
-
-
                     if(num_args == 1){
                         list(cwd);
                     }else{
@@ -275,13 +288,11 @@ int sh(int argc, char **argv, char **envp) {
 
                     break;
                 case PID:
-
+                    printf("");
                     int pid = getpid();
                     printf("%d\n", pid);
                     break;
                 case KILL:
-
-
                     if(num_args == 3){
                         char* pid_str = args[2];
                         char* signal_str = args[1];
@@ -327,7 +338,6 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case PROMPT:
-
                     free(prompt_prefix);
                     if(num_args == 1){
                         fgets(BUFFER, BUFFER_SIZE, stdin);
@@ -351,7 +361,6 @@ int sh(int argc, char **argv, char **envp) {
                     //todo
                     break;
                 case SET_ENV:
-
                     if(num_args == 1){
                         printenv(num_args, envp, args);
                     }else if(num_args == 2){
@@ -369,12 +378,12 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 default:
-
+                    printf("");
                     char* cmd_path = which(args[0], pathlist);
 
-                    pid_t child_pid = fork();
+                    pid_t child_pid;
                     //DO strict checking TODO
-                    char* cmd_path;
+                    //char* cmd_path;
 
                     //Check to see if we are an aboslute
                     if(args[0][0]=='.' || args[0][0]=='/'){
@@ -387,7 +396,7 @@ int sh(int argc, char **argv, char **envp) {
                     //If the command exits
                     if(cmd_path != NULL){
                         printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
-                        pid_t child_pid = fork();
+                        child_pid = fork();
                         //printf("%d", child_pid)
 
                         if(child_pid == 0){
@@ -404,9 +413,6 @@ int sh(int argc, char **argv, char **envp) {
                     }else{
                         printf("%s: Command not found\n", args[0]);
                     }
-
-
-
                     //printf("%d", ret);
                     //execve()
 
