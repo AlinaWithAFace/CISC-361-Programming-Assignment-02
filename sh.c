@@ -479,6 +479,7 @@ int sh(int argc, char **argv, char **envp) {
                             printf("%s: Command not found\n", args[0]);
                         }
                     }else{
+                        printf("%s\n", "Invalid Command");
                         printf("Access Error: %i\n", errno);
                     }
 
