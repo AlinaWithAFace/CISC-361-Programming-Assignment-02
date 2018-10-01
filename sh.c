@@ -91,7 +91,7 @@ int sh(int argc, char **argv, char **envp) {
             strcpy(string_input, BUFFER);
 
             //printf("HSHSHSHS\n");
-            history = append(history, string_input);
+            history = append(history, string_input, NULL);
             //traverse(history);
 
             //int y = 3;
@@ -385,7 +385,7 @@ int sh(int argc, char **argv, char **envp) {
                             printf("%s\n", "Cannot convert string to number");
                         } else {
                             int arg_int = (int) args_num;
-                            traverse(history, arg_int);
+                            traverse(history, arg_int, 0);
                         }
                     } else {
                         printf("%s\n", "history: Invalid number of arguments");

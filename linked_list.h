@@ -1,14 +1,16 @@
-struct Node {
-    char *data;
-    struct Node *next;
+struct Node  
+{ 
+  char* key;
+  char* data; 
+  struct Node *next; 
 };
 
-struct Node *append(struct Node *, char *);
+struct Node* append(struct Node*, char*, char*);
 
-void traverse(struct Node *, int num);
+void traverse(struct Node*, int num, int keys);
 
-int find(struct Node *, char *);
+char* find(struct Node*, char* );
 
-void update(struct Node *, char *old_str, char *);
+void update(struct Node*, char* old_str, char*);
 
-void freeAll(struct Node *);
+void freeAll(struct Node*);
