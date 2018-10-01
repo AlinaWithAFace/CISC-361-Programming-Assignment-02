@@ -243,7 +243,7 @@ int sh(int argc, char **argv, char **envp) {
                     //CD 100%
                     break;
                 case CD:
-
+                    printf("");
                     char *cd_path = args[1];
 
                     if (num_args == 1) {
@@ -309,6 +309,7 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case PID:
+                    printf("");
                     int pid = getpid();
                     printf("%d\n", pid);
                     break;
@@ -427,7 +428,7 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 default:
-
+                    printf("");
                     char *cmd_path;
 
                     //Check to see if we are an aboslute
@@ -456,9 +457,6 @@ int sh(int argc, char **argv, char **envp) {
                     } else {
                         printf("%s: Command not found\n", args[0]);
                     }
-
-
-
                     //printf("%d", ret);
                     //execve()
 
