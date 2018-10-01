@@ -146,257 +146,323 @@ int sh(int argc, char **argv, char **envp) {
 
             //How many things were in the toke 
 
-            if (strcmp(args[0], "exit") == 0) {
-                go = 0;
-            } else if (strcmp(args[0], "which") == 0) {
-                if (args[1] == NULL) {
-                    printf("%s", "which: Too few arguments.\n");
-                } else {
+            typedef enum commands {
+                EXIT,
+                WHICH,
+                WHERE,
+                CD,
+                GET_CWD,
+                PWD,
+                LIST,
+                PID,
+                KILL,
+                PROMPT,
+                PRINT_ENV,
+                ALIAS,
+                HISTORY,
+                SET_ENV,
+                command_count
+            } commands;
 
-                    //Iterate though all following args
-                    for (int i = 1; i < MAXARGS; i++) {
-                        if (args[i] != NULL) {
-                            char *result = which(args[i], pathlist);
-                            if (result != NULL) {
-                                printf("%s\n", result);
-                                free(result);
+            char *command_strings[] = {
+                    "exit", "which", "where", "cd", "getcwd", "pwd", "list", "pid", "kill", "prompt", "printenv",
+                    "alias", "history", "setenv"
+            };
+
+
+            int command_string_index = 0;
+
+            for (command_string_index = 0; command_string_index < command_count; ++command_string_index) {
+                if (strcmp(args[0], command_strings[command_string_index]) == 0) {
+                    //printf("Matched %s\n", command_strings[command_string_index]);
+                    break;
+                }
+            }
+
+
+//            printf("broke out of for loop with command index %d\n", command_string_index);
+//            printf(command_strings[command_string_index]);
+//
+//            if (NULL == command_strings[command_string_index]) {
+//                printf("Not found?");
+//            } else {
+//                printf("Interpreted as %s\n", command_strings[command_string_index]);
+//            }
+
+
+/////
+
+
+            switch (command_string_index) {
+                case EXIT:
+                    go = 0;
+                    break;
+                case WHICH:
+                    if (args[1] == NULL) {
+                        printf("%s", "which: Too few arguments.\n");
+                    } else {
+
+                        //Iterate though all following args
+                        for (int i = 1; i < MAXARGS; i++) {
+                            if (args[i] != NULL) {
+                                char *result = which(args[i], pathlist);
+                                if (result != NULL) {
+                                    printf("%s\n", result);
+                                    free(result);
+                                } else {
+                                    printf("%s not found\n", args[i]);
+                                }
                             } else {
-                                printf("%s not found\n", args[i]);
+                                break;
                             }
-                        } else {
-                            break;
                         }
-                    }
 
-                }
-            } else if (strcmp(args[0], "where") == 0) {
-                if (args[1] == NULL) {
-                    printf("%s", "where: Too few arguments.\n");
-                } else {
-                    //TODO Impelemnt multiple args
-                    for (int i = 1; i < MAXARGS; i++) {
-                        if (args[i] != NULL) {
-                            char *result = where(args[i], pathlist);
-                            if (result != NULL) {
-                                printf("%s\n", result);
-                                free(result);
+                    }
+                    break;
+                case WHERE:
+
+                    if (args[1] == NULL) {
+                        printf("%s", "where: Too few arguments.\n");
+                    } else {
+                        //TODO Impelemnt multiple args
+                        for (int i = 1; i < MAXARGS; i++) {
+                            if (args[i] != NULL) {
+                                char *result = where(args[i], pathlist);
+                                if (result != NULL) {
+                                    printf("%s\n", result);
+                                    free(result);
+                                } else {
+                                    printf("%s not found\n", args[i]);
+                                }
                             } else {
-                                printf("%s not found\n", args[i]);
+                                break;
                             }
+                        }
+                    }
+
+                    //CD 100%
+                    break;
+                case CD:
+
+                    char *cd_path = args[1];
+
+                    if (num_args == 1) {
+                        cd_path = homedir;
+                    } else {
+                        cd_path = args[1];
+                    }
+
+                    //printf(cd_path);
+
+                    //get the current working directory
+                    if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
+                        perror("getcwd");
+                        exit(2);
+                    }
+
+                    if (cd_path[0] == '-') {
+                        if (chdir(owd) < 0) {
+                            printf("Invalid Directory: %d\n", errno);
                         } else {
-                            break;
+                            free(cwd);
+                            cwd = malloc((int) strlen(owd));
+                            strcpy(cwd, owd);
+
+
+                            free(owd);
+                            owd = malloc((int) strlen(BUFFER));
+                            strcpy(owd, BUFFER);
+                        }
+                    } else {
+                        if (chdir(cd_path) < 0) {
+                            printf("Invalid Directory: %d\n", errno);
+                        } else {
+                            free(owd);
+                            owd = malloc((int) strlen(BUFFER));
+                            strcpy(owd, BUFFER);
+
+                            if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
+                                perror("getcwd");
+                                exit(2);
+                            }
+
+                            free(cwd);
+                            cwd = malloc((int) strlen(BUFFER));
+                            strcpy(cwd, BUFFER);
                         }
                     }
-                }
+                    break;
+                case PWD:
 
-                //CD 100%
-            } else if (strcmp(args[0], "cd") == 0) {
-                char *cd_path = args[1];
-
-                if (num_args == 1) {
-                    cd_path = homedir;
-                } else {
-                    cd_path = args[1];
-                }
-
-                //printf(cd_path);
-
-                //get the current working directory
-                if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
-                    perror("getcwd");
-                    exit(2);
-                }
-
-                if (cd_path[0] == '-') {
-                    if (chdir(owd) < 0) {
-                        printf("Invalid Directory: %d\n", errno);
+                    printf("%s\n", cwd);
+                    break;
+                case LIST:
+                    if (num_args == 1) {
+                        list(cwd);
                     } else {
-                        free(cwd);
-                        cwd = malloc((int) strlen(owd));
-                        strcpy(cwd, owd);
-
-
-                        free(owd);
-                        owd = malloc((int) strlen(BUFFER));
-                        strcpy(owd, BUFFER);
-                    }
-                } else {
-                    if (chdir(cd_path) < 0) {
-                        printf("Invalid Directory: %d\n", errno);
-                    } else {
-                        free(owd);
-                        owd = malloc((int) strlen(BUFFER));
-                        strcpy(owd, BUFFER);
-
-                        if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
-                            perror("getcwd");
-                            exit(2);
-                        }
-
-                        free(cwd);
-                        cwd = malloc((int) strlen(BUFFER));
-                        strcpy(cwd, BUFFER);
-                    }
-                }
-
-
-            } else if (strcmp(args[0], "pwd") == 0) {
-                printf("%s\n", cwd);
-            } else if (strcmp(args[0], "list") == 0) {
-
-                if (num_args == 1) {
-                    list(cwd);
-                } else {
-                    for (int i = 1; i < MAXARGS; i++) {
-                        if (args[i] != NULL) {
-                            printf("[%s]:\n", args[i]);
-                            list(args[i]);
+                        for (int i = 1; i < MAXARGS; i++) {
+                            if (args[i] != NULL) {
+                                printf("[%s]:\n", args[i]);
+                                list(args[i]);
+                            }
                         }
                     }
-                }
-
-            } else if (strcmp(args[0], "pid") == 0) {
-                int pid = getpid();
-                printf("%d\n", pid);
-            } else if (strcmp(args[0], "kill") == 0) {
-
-                if (num_args == 3) {
-                    char *pid_str = args[2];
-                    char *signal_str = args[1];
-
-                    char *end;
-                    long pid_num;
-                    long sig_num;
-
-                    pid_num = strtol(pid_str, &end, 10);
-                    //converting pid
-                    if (end == pid_str) {
-                        printf("%s\n", "Cannot convert string to number");
-
-                    }
-                    //get rid of the - flag
-                    signal_str[0] = ' ';
-                    sig_num = strtol(signal_str, &end, 10);
-
-                    if (end == signal_str) {
-                        printf("%s\n", "Cannot convert string to number");
-
-                    }
-
-                    int id = (int) pid_num;
-                    int sig = (int) sig_num;
-                    kill(id, sig_num);
-
-                    //TODO Finish this
-                    //atoi(args[2])
-                } else if (num_args == 2) {
-                    char *pid_str = args[1];
-                    char *end;
-                    long num;
-                    num = strtol(pid_str, &end, 10);
-                    if (end == pid_str) {
-                        printf("%s\n", "Cannot convert string to number");
-                    }
-                    int id = (int) num;
-                    kill(id, SIGTERM);
-                    //printf("%d\n", id);
-                } else {
-                    printf("%s\n", "kill: Incorrect amount of arguments");
-                }
-            } else if (strcmp(args[0], "prompt") == 0) {
-                free(prompt_prefix);
-                if (num_args == 1) {
-                    fgets(BUFFER, BUFFER_SIZE, stdin);
-                    len = (int) strlen(BUFFER);
-
-                    BUFFER[len - 1] = '\0';
-                    prompt_prefix = (char *) malloc(len);
-                    strcpy(prompt_prefix, BUFFER);
-                } else if (num_args == 2) {
-                    prompt_prefix = (char *) malloc(strlen(args[1]));
-                    strcpy(prompt_prefix, args[1]);
-                }
-            } else if (strcmp(args[0], "printenv") == 0) {
-                printenv(num_args, envp, args);
-
-            } else if (strcmp(args[0], "alias") == 0) {
-                if (num_args == 1) {
-
-                } else if (num_args == 2) {
-
-                } else {
-
-                }
+                    break;
+                case PID:
+                    int pid = getpid();
+                    printf("%d\n", pid);
+                    break;
+                case KILL:
 
 
-            } else if (strcmp(args[0], "history") == 0) {
-                if (num_args == 2) {
-                    char *args_str = args[1];
-                    long args_num;
-                    char *end;
+                    if (num_args == 3) {
+                        char *pid_str = args[2];
+                        char *signal_str = args[1];
 
-                    args_num = strtol(args_str, &end, 10);
-                    if (end == args_str) {
-                        printf("%s\n", "Cannot convert string to number");
+                        char *end;
+                        long pid_num;
+                        long sig_num;
+
+                        pid_num = strtol(pid_str, &end, 10);
+                        //converting pid
+                        if (end == pid_str) {
+                            printf("%s\n", "Cannot convert string to number");
+
+                        }
+                        //get rid of the - flag
+                        signal_str[0] = ' ';
+                        sig_num = strtol(signal_str, &end, 10);
+
+                        if (end == signal_str) {
+                            printf("%s\n", "Cannot convert string to number");
+
+                        }
+
+                        int id = (int) pid_num;
+                        int sig = (int) sig_num;
+                        kill(id, sig_num);
+
+                        //TODO Finish this
+                        //atoi(args[2])
+                    } else if (num_args == 2) {
+                        char *pid_str = args[1];
+                        char *end;
+                        long num;
+                        num = strtol(pid_str, &end, 10);
+                        if (end == pid_str) {
+                            printf("%s\n", "Cannot convert string to number");
+                        }
+                        int id = (int) num;
+                        kill(id, SIGTERM);
+                        //printf("%d\n", id);
                     } else {
-                        int arg_int = (int) args_num;
-                        traverse(history, arg_int);
+                        printf("%s\n", "kill: Incorrect amount of arguments");
                     }
-                } else {
-                    printf("%s\n", "history: Invalid number of arguments");
-                }
-            } else if (strcmp(args[0], "setenv") == 0) {
-                if (num_args == 1) {
+                    break;
+                case PROMPT:
+
+                    free(prompt_prefix);
+                    if (num_args == 1) {
+                        fgets(BUFFER, BUFFER_SIZE, stdin);
+                        len = (int) strlen(BUFFER);
+
+                        BUFFER[len - 1] = '\0';
+                        prompt_prefix = (char *) malloc(len);
+                        strcpy(prompt_prefix, BUFFER);
+                    } else if (num_args == 2) {
+                        prompt_prefix = (char *) malloc(strlen(args[1]));
+                        strcpy(prompt_prefix, args[1]);
+                    }
+
+                    break;
+                case PRINT_ENV:
+
                     printenv(num_args, envp, args);
-                } else if (num_args == 2) {
-                    setenv(args[1], "", 1);
-                } else if (num_args == 3) {
-                    setenv(args[1], args[2], 1);
 
-                    if (strcmp(args[1], "HOME") == 0) {
-                        homedir = getenv("HOME");
-                    } else if (strcmp(args[1], "PATH") == 0) {
-                        pathlist = get_path();
+                    break;
+                case ALIAS:
+
+                    if (num_args == 1) {
+
+                    } else if (num_args == 2) {
+
+                    } else {
+
                     }
-                } else {
-                    printf("%s\n", "setenv: Incorrect amount of arguments");
-                }
-            } else {
-                char *cmd_path;
+                    break;
+                case HISTORY:
 
-                //Check to see if we are an aboslute
-                if (args[0][0] == '.' || args[0][0] == '/') {
-                    cmd_path = args[0];
-                } else {
-                    cmd_path = which(args[0], pathlist);
-                }
-                //cmd_path = which(args[0], pathlist);
+                    if (num_args == 2) {
+                        char *args_str = args[1];
+                        long args_num;
+                        char *end;
 
-                //If the command exits
-                if (cmd_path != NULL) {
-                    printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
-                    pid_t child_pid = fork();
-                    //printf("%d", child_pid)
+                        args_num = strtol(args_str, &end, 10);
+                        if (end == args_str) {
+                            printf("%s\n", "Cannot convert string to number");
+                        } else {
+                            int arg_int = (int) args_num;
+                            traverse(history, arg_int);
+                        }
+                    } else {
+                        printf("%s\n", "history: Invalid number of arguments");
+                    }
+                    break;
+                case SET_ENV:
 
-                    if (child_pid == 0) {
-                        int ret = execve(cmd_path, args, envp);
+                    if (num_args == 1) {
+                        printenv(num_args, envp, args);
+                    } else if (num_args == 2) {
+                        setenv(args[1], "", 1);
+                    } else if (num_args == 3) {
+                        setenv(args[1], args[2], 1);
+
+                        if (strcmp(args[1], "HOME") == 0) {
+                            homedir = getenv("HOME");
+                        } else if (strcmp(args[1], "PATH") == 0) {
+                            pathlist = get_path();
+                        }
+                    } else {
+                        printf("%s\n", "setenv: Incorrect amount of arguments");
+                    }
+                    break;
+                default:
+
+                    char *cmd_path;
+
+                    //Check to see if we are an aboslute
+                    if (args[0][0] == '.' || args[0][0] == '/') {
+                        cmd_path = args[0];
+                    } else {
+                        cmd_path = which(args[0], pathlist);
+                    }
+                    //cmd_path = which(args[0], pathlist);
+
+                    //If the command exits
+                    if (cmd_path != NULL) {
+                        printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
+                        pid_t child_pid = fork();
+                        //printf("%d", child_pid)
+
+                        if (child_pid == 0) {
+                            int ret = execve(cmd_path, args, envp);
+                        }
+
+                        int child_status;
+
+                        // alarm(5);
+                        waitpid(child_pid, &child_status, 0);
+                        free(cmd_path);
+                    } else {
+                        printf("%s: Command not found\n", args[0]);
                     }
 
-                    int child_status;
-
-                    // alarm(5);
-                    waitpid(child_pid, &child_status, 0);
-                    free(cmd_path);
-                } else {
-                    printf("%s: Command not found\n", args[0]);
-                }
 
 
+                    //printf("%d", ret);
+                    //execve()
 
-                //printf("%d", ret);
-                //execve()
-
-                //We assume the user wants to run an actual commad
+                    //We assume the user wants to run an actual commad
             }
 
             free(token);
