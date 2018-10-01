@@ -15,6 +15,7 @@
 #include "linked_list.h"
 
 #define BUFFER_SIZE 1000
+#define MAX_COMMAND_HISTORY 999
 #define MAX_ALIAS 10
 
 void do_nothing_handler(int sig) {
@@ -75,6 +76,9 @@ int sh(int argc, char **argv, char **envp) {
 
     //TODO ADD STUFF FOR NOT HVING CORRECT AMOUNT OF ARGUMENTS
     while (go) {
+        for (int j = 0; j < MAXARGS; j++) {
+                args[j] = NULL;
+        }
         /* print your prompt */
 
 
@@ -86,24 +90,62 @@ int sh(int argc, char **argv, char **envp) {
         if (len >= 2) {
             BUFFER[len - 1] = '\0';
             string_input = (char *) malloc(len);
-
-
+            char* string_input_alias_find = (char*)malloc(len);
             strcpy(string_input, BUFFER);
-
-            //printf("HSHSHSHS\n");
+            strcpy(string_input_alias_find, BUFFER);
             history = append(history, string_input, NULL);
-            //traverse(history);
 
-            //int y = 3;
+            
 
-            char *token = strtok(string_input, " ");
+
+
+            char *token = strtok(string_input_alias_find, " ");
+
+            //What we want to do
+            //Get the first command from the input
+            //See if it is in the alias table
+            //If so replace it with the one in the alias table
+            //printf("%s\n",token);
+
             int num_args = 0;
 
-            //TODO: IMPLEMENT * and ? support
-            //GLOB EXPANSIONcmd_path
+            char* alias_find_result = find(alias, token);
+
+            if(alias_find_result != NULL){
+                //We found it in our alias table, so we have to replace it.
+                //printf("%s\n", alias_find_result);
+                char* alias_token = strtok(alias_find_result, " ");
+
+                while(alias_token){
+                    //printf("%s\n", alias_token);
+                    len = (int) strlen(alias_token);
+                    args[num_args] = (char *) malloc(len);
+                    strcpy(BUFFER, alias_token);
+                    strcpy(args[num_args], BUFFER);
+                    alias_token = strtok(NULL, " ");
+                    num_args++;
+                }
+                free(alias_token);
+                //token = strtok(NULL, " ");
+            }
+
+            free(alias_find_result);
+            
+
+            token = strtok(string_input," ");
+
+            if(alias_find_result != NULL){
+                token = strtok(NULL, " ");
+            }
+
+            //token = strtok(string_input, " ");
+            //free(alia)
+
+            
 
 
             while (token) {
+                //printf("(%s)\n", token);
                 if (strstr(token, "*") != NULL || strstr(token, "?") != NULL) {
                     glob_t paths;
                     int csource;
@@ -365,13 +407,32 @@ int sh(int argc, char **argv, char **envp) {
                     printenv(num_args, envp, args);
                     break;
                 case ALIAS:
-                    //TODO
-                    if (num_args == 1) {
+                    
+                    if(num_args == 1){
+                        traverse(alias, MAX_COMMAND_HISTORY, 1);
+                    }else if(num_args == 2){
+                    
+                    }else{
+                        char ALSBUF[BUFFER_SIZE];
+                        strcpy(ALSBUF, "");
+                        for(int i = 2; i < MAXARGS; i++){
+                            if(args[i] != NULL){
+                                strcat(ALSBUF, args[i]);
+                                strcat(ALSBUF, " ");
+                            }else{
+                                break;
+                            }
+                        }
 
-                    } else if (num_args == 2) {
+                        int len = strlen(ALSBUF);
+                        ALSBUF[len-1] = '\0';
 
-                    } else {
 
+                        if(find(alias, args[1]) != NULL){
+                            //update alias
+                        }else{
+                            alias = append(alias, args[1], ALSBUF);
+                        }
                     }
                     break;
                 case HISTORY:

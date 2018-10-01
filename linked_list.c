@@ -18,7 +18,13 @@ struct Node* append(struct Node* head, char* str, char* key){
 
     struct Node* new = (struct Node*)malloc(sizeof(struct Node));
     new->data = (char*)malloc(strlen(str));
-    new->key = key;
+    if(key == NULL){
+        new->key = NULL;
+    }else{
+       new->key = (char*)malloc(strlen(key));
+       strcpy(new->key, key); 
+    }
+
     new->next = NULL;
     strcpy(new->data, str);
 
@@ -52,7 +58,9 @@ char* find(struct Node* head, char* str){
 
         while(current != NULL){
             if(strcmp(current->data, str) == 0){
-                return current->key;
+                char* toReturn = (char*)malloc(strlen(str));
+                strcpy(toReturn, current->key);
+                return toReturn;
             }
             current = current->next;
         }
