@@ -1,100 +1,92 @@
+/*
+    James Skripchuk & Alina Christenbury
+    CISC361
+    Shell
+*/
+
 
 // A simple C program to introduce 
 // a linked list 
-#include<stdio.h>
-#include<stdlib.h>
+//But also has support for keys and values for alias
+#include<stdio.h> 
+#include<stdlib.h> 
 #include<string.h>
 #include "linked_list.h"
 
-struct Node *append(struct Node *head, char *str) {
-    struct Node *current = head;
+struct Node* append(struct Node* head, char* str, char* key){
+    struct Node* current = head;
+    
 
-
-    if (head != NULL) {
-        while (current->next != NULL) {
+    if(head != NULL){
+        while(current->next != NULL){
             current = current->next;
         }
     }
 
-    struct Node*
-    new = (struct Node *) malloc(sizeof(struct Node));
-    new->data = (char *) malloc(strlen(str));
+    struct Node* new = (struct Node*)malloc(sizeof(struct Node));
+    new->data = (char*)malloc(strlen(str));
+    if(key == NULL){
+        new->key = NULL;
+    }else{
+       new->key = (char*)malloc(strlen(key));
+       strcpy(new->key, key); 
+    }
+
     new->next = NULL;
     strcpy(new->data, str);
 
-    if (head != NULL) {
+    if(head != NULL){
         current->next = new;
-    } else {
+    }else{
         head = new;
     }
 
     return head;
 }
 
-void traverse(struct Node *head, int num) {
-    struct Node *current = head;
+void traverse(struct Node* head, int num, int keys){
+    struct Node* current = head;
     int i = 0;
 
-    if (i == 0) {
-        while (current != NULL) {
+    while(current != NULL && i < num){
+        if(keys == 1){
+            printf("%s (%s)\n", current->data, current->key);
+        }else{
             printf("%s\n", current->data);
-            current = current->next;
-            i++;
         }
-    } else {
-        while (current != NULL && i < num) {
-            printf("%s\n", current->data);
-            current = current->next;
-            i++;
-        }
+        current = current->next;
+        i++;
     }
 }
 
-int find(struct Node *head, char *str) {
-    if (head != NULL) {
-        struct Node *current = head;
+//Returns key given a value
+char* find(struct Node* head, char* str){
+    if(head != NULL){
+        struct Node* current = head;
 
-        while (current != NULL) {
-            if (strcmp(current->data, str) == 0) {
-                return 1;
+        while(current != NULL){
+            if(strcmp(current->data, str) == 0){
+                char* toReturn = (char*)malloc(strlen(str));
+                strcpy(toReturn, current->key);
+                return toReturn;
             }
             current = current->next;
         }
     }
 
-    return 0;
+    return NULL;
 }
 
-void update(struct Node *head, char *old_str, char *new_str) {
 
-}
-
-void freeAll(struct Node *head) {
-    struct Node *current = head;
-    while (current != NULL) {
-        struct Node *toDelete = current;
-        //printf("%s\n", toDelete->data);
+void freeAll(struct Node* head){
+    struct Node* current = head;
+    while(current != NULL){
+        struct Node* toDelete = current;
         current = current->next;
-        //free(toDelete->data);
+        if(toDelete->key != NULL){
+            free(toDelete->key);
+        }
         free(toDelete->data);
         free(toDelete);
     }
 }
-
-// Program to create a simple linked  
-// list with 3 nodes 
-/*
-int main() 
-{ 
-  struct Node* head = NULL; 
-
-  for(int i = 0; i < 10; i++){
-      head = append(head, "bbb");
-  }
-
-  traverse(head);
-
-  freeAll(head);
-  return 0; 
-} 
-*/
