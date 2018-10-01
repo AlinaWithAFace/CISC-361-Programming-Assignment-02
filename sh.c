@@ -18,10 +18,6 @@
 #define MAX_COMMAND_HISTORY 999
 #define MAX_ALIAS 10
 
-
-
-//TODO Implement error checking
-
 int sh(int argc, char **argv, char **envp) {
     char BUFFER[BUFFER_SIZE];
 
@@ -263,9 +259,7 @@ int sh(int argc, char **argv, char **envp) {
                         } else if(num_args == 2) {
                             cd_path = args[1];
                         }
-
-                        //printf(cd_path);
-
+                        
                         //get the current working directory
                         if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
                             perror("getcwd");
@@ -474,7 +468,7 @@ int sh(int argc, char **argv, char **envp) {
                             if (child_pid == 0) {
                                 int ret = execve(cmd_path, args, envp);
                             }
-                            free(cmd_path);
+                            
 
                             int child_status;
 
@@ -487,6 +481,8 @@ int sh(int argc, char **argv, char **envp) {
                     }else{
                         printf("Access Error: %i\n", errno);
                     }
+
+                    free(cmd_path);
                     //printf("%d", ret);
                     //execve()
 
@@ -646,11 +642,6 @@ char *where(char *command, struct pathelement *pathlist) {
 } /* where() */
 
 
-//TODO fix bad dirs
-
-//No args, list file in the current working directory
-//Wirth args, lists file in each directory given as an argument
-//with blank line then the name od 
 void list(char *dir) {
 
     DIR *dr;
@@ -666,7 +657,5 @@ void list(char *dir) {
 
 
     closedir(dr);
-    /* see man page for opendir() and readdir() and print out filenames for
-    the directory passed */
 } /* list() */
 
