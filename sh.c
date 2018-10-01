@@ -168,32 +168,25 @@ int sh(int argc, char **argv, char **envp) {
                     "exit", "which", "where", "cd", "getcwd", "pwd", "list", "pid", "kill", "prompt", "printenv",
                     "alias", "history", "setenv"
             };
+            
+            int command_index = 0;
 
-
-            int command_string_index = 0;
-
-            for (command_string_index = 0; command_string_index < command_count; ++command_string_index) {
-                if (strcmp(args[0], command_strings[command_string_index]) == 0) {
-                    //printf("Matched %s\n", command_strings[command_string_index]);
+            for (command_index = 0; command_index < command_count; ++command_index) {
+                if (strcmp(args[0], command_strings[command_index]) == 0) {
+                    //printf("Matched %s\n", command_strings[command_index]);
                     break;
                 }
             }
-
-
-//            printf("broke out of for loop with command index %d\n", command_string_index);
-//            printf(command_strings[command_string_index]);
+//            printf("left out of for loop with command index %d\n", command_index);
+//            printf(command_strings[command_index]);
 //
-//            if (NULL == command_strings[command_string_index]) {
+//            if (NULL == command_strings[command_index]) {
 //                printf("Not found?");
 //            } else {
-//                printf("Interpreted as %s\n", command_strings[command_string_index]);
+//                printf("Interpreted as %s\n", command_strings[command_index]);
 //            }
 
-
-/////
-
-
-            switch (command_string_index) {
+            switch (command_index) {
                 case EXIT:
                     go = 0;
                     break;
@@ -216,15 +209,13 @@ int sh(int argc, char **argv, char **envp) {
                                 break;
                             }
                         }
-
                     }
                     break;
                 case WHERE:
-
                     if (args[1] == NULL) {
                         printf("%s", "where: Too few arguments.\n");
                     } else {
-                        //TODO Impelemnt multiple args
+                        //TODO Implement multiple args
                         for (int i = 1; i < MAXARGS; i++) {
                             if (args[i] != NULL) {
                                 char *result = where(args[i], pathlist);
@@ -239,10 +230,9 @@ int sh(int argc, char **argv, char **envp) {
                             }
                         }
                     }
-
-                    //CD 100%
                     break;
                 case CD:
+                    //CD 100%
                     printf("");
                     char *cd_path = args[1];
 
@@ -293,7 +283,6 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case PWD:
-
                     printf("%s\n", cwd);
                     break;
                 case LIST:
@@ -314,8 +303,6 @@ int sh(int argc, char **argv, char **envp) {
                     printf("%d\n", pid);
                     break;
                 case KILL:
-
-
                     if (num_args == 3) {
                         char *pid_str = args[2];
                         char *signal_str = args[1];
@@ -361,7 +348,6 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case PROMPT:
-
                     free(prompt_prefix);
                     if (num_args == 1) {
                         fgets(BUFFER, BUFFER_SIZE, stdin);
@@ -374,15 +360,12 @@ int sh(int argc, char **argv, char **envp) {
                         prompt_prefix = (char *) malloc(strlen(args[1]));
                         strcpy(prompt_prefix, args[1]);
                     }
-
                     break;
                 case PRINT_ENV:
-
                     printenv(num_args, envp, args);
-
                     break;
                 case ALIAS:
-
+                    //TODO
                     if (num_args == 1) {
 
                     } else if (num_args == 2) {
@@ -392,7 +375,6 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case HISTORY:
-
                     if (num_args == 2) {
                         char *args_str = args[1];
                         long args_num;
@@ -410,7 +392,6 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case SET_ENV:
-
                     if (num_args == 1) {
                         printenv(num_args, envp, args);
                     } else if (num_args == 2) {
@@ -431,7 +412,7 @@ int sh(int argc, char **argv, char **envp) {
                     printf("");
                     char *cmd_path;
 
-                    //Check to see if we are an aboslute
+                    //Check to see if we are an absolute
                     if (args[0][0] == '.' || args[0][0] == '/') {
                         cmd_path = args[0];
                     } else {
@@ -460,9 +441,8 @@ int sh(int argc, char **argv, char **envp) {
                     //printf("%d", ret);
                     //execve()
 
-                    //We assume the user wants to run an actual commad
+                    //We assume the user wants to run an actual command
             }
-
             free(token);
 
             for (int j = 0; j < MAXARGS; j++) {
@@ -473,8 +453,6 @@ int sh(int argc, char **argv, char **envp) {
 
             free(string_input);
         }
-
-
     }
 
     //Free ALL the things!
@@ -497,7 +475,6 @@ int sh(int argc, char **argv, char **envp) {
         free(current);
         current = current->next;
     }
-
 
     return 0;
 } /* sh() */
