@@ -18,9 +18,7 @@
 #define MAX_COMMAND_HISTORY 999
 #define MAX_ALIAS 10
 
-void do_nothing_handler(int sig) {
-    //printf("Caught signal %d\n", sig);
-}
+
 
 //TODO Implement error checking
 
@@ -67,10 +65,12 @@ int sh(int argc, char **argv, char **envp) {
     char *string_input;
 
     //TODo: Segfaults on signal interrupt commmands
-    signal(SIGINT, do_nothing_handler);
-    signal(SIGTERM, do_nothing_handler);
-    signal(SIGTSTP, do_nothing_handler);
-
+    //signal(SIGINT, do_nothing_handler);
+    //signal(SIGTERM, do_nothing_handler);
+    //signal(SIGTSTP, do_nothing_handler);
+    sigignore(SIGINT);
+    sigignore(SIGTERM);
+    sigignore(SIGTSTP);
     char *prompt_prefix = (char *) malloc(0);
 
 
@@ -130,6 +130,7 @@ int sh(int argc, char **argv, char **envp) {
             }
 
             free(alias_find_result);
+            free(string_input_alias_find);
             
 
             token = strtok(string_input," ");
@@ -174,20 +175,6 @@ int sh(int argc, char **argv, char **envp) {
                 num_args++;
             }
 
-            //Test print
-            /*for(int j = 0;j<MAXARGS;j++){
-                if(args[j] != NULL){
-                    printf("%s\n", args[j]);
-                }else{
-                   printf("%s\n", "NULL");
-                }
-                //free(args[j]);
-                //Null out the args
-                //args[j] = NULL;
-            }*/
-
-            //How many things were in the toke 
-
             typedef enum commands {
                 EXIT,
                 WHICH,
@@ -215,18 +202,9 @@ int sh(int argc, char **argv, char **envp) {
 
             for (command_index = 0; command_index < command_count; ++command_index) {
                 if (strcmp(args[0], command_strings[command_index]) == 0) {
-                    //printf("Matched %s\n", command_strings[command_index]);
                     break;
                 }
             }
-//            printf("left out of for loop with command index %d\n", command_index);
-//            printf(command_strings[command_index]);
-//
-//            if (NULL == command_strings[command_index]) {
-//                printf("Not found?");
-//            } else {
-//                printf("Interpreted as %s\n", command_strings[command_index]);
-//            }
 
             switch (command_index) {
                 case EXIT:
@@ -277,50 +255,53 @@ int sh(int argc, char **argv, char **envp) {
                     //CD 100%
                     printf("");
                     char *cd_path = args[1];
-
-                    if (num_args == 1) {
-                        cd_path = homedir;
-                    } else {
-                        cd_path = args[1];
-                    }
-
-                    //printf(cd_path);
-
-                    //get the current working directory
-                    if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
-                        perror("getcwd");
-                        exit(2);
-                    }
-
-                    if (cd_path[0] == '-') {
-                        if (chdir(owd) < 0) {
-                            printf("Invalid Directory: %d\n", errno);
-                        } else {
-                            free(cwd);
-                            cwd = malloc((int) strlen(owd));
-                            strcpy(cwd, owd);
-
-
-                            free(owd);
-                            owd = malloc((int) strlen(BUFFER));
-                            strcpy(owd, BUFFER);
+                    if(num_args > 2){
+                        perror("cd: Too many arguments");
+                    }else{
+                        if (num_args == 1) {
+                            cd_path = homedir;
+                        } else if(num_args == 2) {
+                            cd_path = args[1];
                         }
-                    } else {
-                        if (chdir(cd_path) < 0) {
-                            printf("Invalid Directory: %d\n", errno);
-                        } else {
-                            free(owd);
-                            owd = malloc((int) strlen(BUFFER));
-                            strcpy(owd, BUFFER);
 
-                            if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
-                                perror("getcwd");
-                                exit(2);
+                        //printf(cd_path);
+
+                        //get the current working directory
+                        if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
+                            perror("getcwd");
+                            exit(2);
+                        }
+
+                        if (cd_path[0] == '-') {
+                            if (chdir(owd) < 0) {
+                                printf("Invalid Directory: %d\n", errno);
+                            } else {
+                                free(cwd);
+                                cwd = malloc((int) strlen(owd));
+                                strcpy(cwd, owd);
+
+
+                                free(owd);
+                                owd = malloc((int) strlen(BUFFER));
+                                strcpy(owd, BUFFER);
                             }
+                        } else {
+                            if (chdir(cd_path) < 0) {
+                                printf("Invalid Directory: %d\n", errno);
+                            } else {
+                                free(owd);
+                                owd = malloc((int) strlen(BUFFER));
+                                strcpy(owd, BUFFER);
 
-                            free(cwd);
-                            cwd = malloc((int) strlen(BUFFER));
-                            strcpy(cwd, BUFFER);
+                                if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
+                                    perror("getcwd");
+                                    exit(2);
+                                }
+
+                                free(cwd);
+                                cwd = malloc((int) strlen(BUFFER));
+                                strcpy(cwd, BUFFER);
+                            }
                         }
                     }
                     break;
@@ -475,29 +456,36 @@ int sh(int argc, char **argv, char **envp) {
 
                     //Check to see if we are an absolute
                     if (args[0][0] == '.' || args[0][0] == '/') {
-                        cmd_path = args[0];
+                        cmd_path = (char *)malloc(strlen(args[0]));
+                        strcpy(cmd_path, args[0]);
                     } else {
                         cmd_path = which(args[0], pathlist);
                     }
                     //cmd_path = which(args[0], pathlist);
 
                     //If the command exits
-                    if (cmd_path != NULL) {
-                        printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
-                        pid_t child_pid = fork();
-                        //printf("%d", child_pid)
+                    int access_result = access(cmd_path, X_OK);
+                    if(access_result == 0){
+                        if (cmd_path != NULL) {
+                            printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
+                            pid_t child_pid = fork();
+                            //printf("%d", child_pid)
 
-                        if (child_pid == 0) {
-                            int ret = execve(cmd_path, args, envp);
+                            if (child_pid == 0) {
+                                int ret = execve(cmd_path, args, envp);
+                            }
+                            free(cmd_path);
+
+                            int child_status;
+
+                            // alarm(5);
+                            waitpid(child_pid, &child_status, 0);
+                            
+                        } else {
+                            printf("%s: Command not found\n", args[0]);
                         }
-
-                        int child_status;
-
-                        // alarm(5);
-                        waitpid(child_pid, &child_status, 0);
-                        free(cmd_path);
-                    } else {
-                        printf("%s: Command not found\n", args[0]);
+                    }else{
+                        printf("Access Error: %i\n", errno);
                     }
                     //printf("%d", ret);
                     //execve()
