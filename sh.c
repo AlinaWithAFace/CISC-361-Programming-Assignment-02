@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <errno.h>
 #include "sh.h"
+#include <glob.h>
 
 #define BUFFER_SIZE 1000
 
@@ -85,14 +86,49 @@ int sh(int argc, char **argv, char **envp) {
             int num_args = 0;
 
             //TODO: IMPLEMENT * and ? support
-            
+            //GLOB EXPANSION
+
+
             while(token){
-                len = (int)strlen(token);
-                args[num_args] = (char*)malloc(len);
-                strcpy(args[num_args], token);
+                if(strstr(token, "*") != NULL || strstr(token, "?") != NULL){
+                    glob_t paths;
+                    int csource;
+
+                    csource = glob(token, 0, NULL, &paths);
+
+                    char **p;
+                    if (csource == 0) {
+                        for (p = paths.gl_pathv; *p != NULL; ++p){
+                            len = (int)strlen(*p);
+                            args[num_args] = (char*)malloc(len);
+                            strcpy(args[num_args], *p);
+                            num_args++;
+                        }
+                        //puts(*p);
+
+                        globfree(&paths);
+                    }
+                    //printf("NULL");
+                }else{
+                    len = (int)strlen(token);
+                    args[num_args] = (char*)malloc(len);
+                    strcpy(args[num_args], token);
+                }
                 token = strtok(NULL," ");
                 num_args++;
             }
+
+            //Test print
+            /*for(int j = 0;j<MAXARGS;j++){
+                if(args[j] != NULL){
+                    printf("%s\n", args[j]);
+                }else{
+                   printf("%s\n", "NULL");
+                }
+                //free(args[j]);
+                //Null out the args
+                //args[j] = NULL;
+            }*/
 
             //How many things were in the toke 
 
@@ -290,18 +326,37 @@ int sh(int argc, char **argv, char **envp) {
                     printf("%s\n", "setenv: Incorrect amount of arguments");
                 }
             }else{
-                char* cmd_path = which(args[0], pathlist);
+                //DO strict checking TODO
+                char* cmd_path;
+
+                //Check to see if we are an aboslute
+                if(args[0][0]=='.' || args[0][0]=='/'){
+                    cmd_path = args[0];
+                }else{
+                    cmd_path = which(args[0], pathlist);
+                }
+                //cmd_path = which(args[0], pathlist);
                 
-                pid_t child_pid = fork();
+                //If the command exits
+                if(cmd_path != NULL){
+                    printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
+                    pid_t child_pid = fork();
                 //printf("%d", child_pid)
 
-                if(child_pid == 0){
-                    int ret = execve(cmd_path, argv, envp);
+                    if(child_pid == 0){
+                        int ret = execve(cmd_path, args, envp);
+                    }
+
+                    int child_status;
+
+                    alarm(5);
+                    waitpid(child_pid, &child_status, 0);
+                    free(cmd_path);
+                }else{
+                    printf("%s: Command not found\n", args[0]);
                 }
 
-                int child_status;
-
-                waitpid(child_pid, &child_status, 0);
+                
                 
                  //printf("%d", ret);
                 //execve()
@@ -313,7 +368,6 @@ int sh(int argc, char **argv, char **envp) {
 
             for(int j = 0;j<MAXARGS;j++){
                 free(args[j]);
-
                 //Null out the args
                 args[j] = NULL;
             }
