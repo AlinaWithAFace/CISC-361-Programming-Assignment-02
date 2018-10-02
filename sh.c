@@ -6,10 +6,11 @@
 
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <string.h>
 #include <strings.h>
 #include <limits.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <pwd.h>
 #include <dirent.h>
@@ -481,11 +482,14 @@ int sh(int argc, char **argv, char **envp) {
                     }
 
                     //If the command exits  and we can run it...
-                    int access_result = access(cmd_path, X_OK);
+                    int access_result = access(cmd_path, F_OK|X_OK);
 
                     //Run it
-                    struct stat sb;
-                    if(access_result == 0 && stat(cmd_path, &sb) == 0 && sb.st_mode & S_IXUSR){
+                    struct stat path_stat;
+                    stat(cmd_path, &path_stat);
+                    
+                    //Makes sure it's a file
+                    if(access_result == 0 && S_ISREG(path_stat.st_mode)){
                         if (cmd_path != NULL) {
                             printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
                             pid_t child_pid = fork();
