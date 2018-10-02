@@ -15,4 +15,4 @@ void list(char *dir);
 
 
 #define PROMPTMAX 32
-#define MAXARGS 10
+#define MAXARGS 100
