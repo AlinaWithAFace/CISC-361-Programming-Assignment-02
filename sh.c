@@ -5,6 +5,7 @@
 */
 
 #include <stdio.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <strings.h>
 #include <limits.h>
@@ -183,6 +184,7 @@ int sh(int argc, char **argv, char **envp) {
                             strcpy(args[num_args], *p);
                             num_args++;
                         }
+                        
                         globfree(&paths);
                     }
                 
@@ -482,7 +484,8 @@ int sh(int argc, char **argv, char **envp) {
                     int access_result = access(cmd_path, X_OK);
 
                     //Run it
-                    if(access_result == 0){
+                    struct stat sb;
+                    if(access_result == 0 && stat(cmd_path, &sb) == 0 && sb.st_mode & S_IXUSR){
                         if (cmd_path != NULL) {
                             printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
                             pid_t child_pid = fork();
