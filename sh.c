@@ -26,6 +26,11 @@
 #define MAX_COMMAND_HISTORY 999
 #define MAX_ALIAS 10
 
+void handle_sigchild(int sig){
+    while (waitpid((pid_t)(-1), 0, WNOHANG) > 0){}
+    //printf("Reaped Children!\n");
+}
+
 int sh(int argc, char **argv, char **envp) {
 
     //Defining variables
@@ -71,6 +76,7 @@ int sh(int argc, char **argv, char **envp) {
     sigignore(SIGINT);
     sigignore(SIGTERM);
     sigignore(SIGTSTP);
+    signal(SIGCHLD, handle_sigchild);
     char *prompt_prefix = (char *) malloc(0);
 
     //Enums used for switch statements
@@ -499,7 +505,12 @@ int sh(int argc, char **argv, char **envp) {
                             }
                             
                             int child_status;
-                            waitpid(child_pid, &child_status, 0);
+
+                            if(strcmp(args[num_args-1], "&") == 0){
+                                waitpid(child_pid, &child_status, WNOHANG);
+                            }else{
+                                waitpid(child_pid, &child_status, 0);
+                            }
                             
                         } else {
                             printf("%s: Command not found\n", args[0]);
