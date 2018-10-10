@@ -21,13 +21,14 @@
 #include "sh.h"
 #include <glob.h>
 #include "linked_list.h"
+#include <assert.h>
 
 #define BUFFER_SIZE 1000
 #define MAX_COMMAND_HISTORY 999
 #define MAX_ALIAS 10
 
-void handle_sigchild(int sig){
-    while (waitpid((pid_t)(-1), 0, WNOHANG) > 0){}
+void handle_sigchild(int sig) {
+    while (waitpid((pid_t) (-1), 0, WNOHANG) > 0) {}
     //printf("Reaped Children!\n");
 }
 
@@ -81,26 +82,40 @@ int sh(int argc, char **argv, char **envp) {
 
     //Enums used for switch statements
     typedef enum commands {
-                EXIT,
-                WHICH,
-                WHERE,
-                CD,
-                GET_CWD,
-                PWD,
-                LIST,
-                PID,
-                KILL,
-                PROMPT,
-                PRINT_ENV,
-                ALIAS,
-                HISTORY,
-                SET_ENV,
-                command_count
-            } commands;
+        EXIT,
+        WHICH,
+        WHERE,
+        CD,
+        GET_CWD,
+        PWD,
+        LIST,
+        PID,
+        KILL,
+        PROMPT,
+        PRINT_ENV,
+        ALIAS,
+        HISTORY,
+        SET_ENV,
+        REDIRECT,
+        command_count
+    } commands;
 
     char *command_strings[] = {
-            "exit", "which", "where", "cd", "getcwd", "pwd", "list", "pid", "kill", "prompt", "printenv",
-            "alias", "history", "setenv"
+            "exit",
+            "which",
+            "where",
+            "cd",
+            "getcwd",
+            "pwd",
+            "list",
+            "pid",
+            "kill",
+            "prompt",
+            "printenv",
+            "alias",
+            "history",
+            "setenv",
+            "redirect"
     };
 
 
@@ -111,7 +126,7 @@ int sh(int argc, char **argv, char **envp) {
 
         //Null out our argument array
         for (int j = 0; j < MAXARGS; j++) {
-                args[j] = NULL;
+            args[j] = NULL;
         }
 
         //Print prompt
@@ -126,14 +141,14 @@ int sh(int argc, char **argv, char **envp) {
             //Set up strings for manipulation
             BUFFER[len - 1] = '\0';
             string_input = (char *) malloc(len);
-            char* string_input_alias_find = (char*)malloc(len);
+            char *string_input_alias_find = (char *) malloc(len);
             strcpy(string_input, BUFFER);
             strcpy(string_input_alias_find, BUFFER);
             history = append(history, string_input, NULL);
 
             char *token = strtok(string_input_alias_find, " ");
-            char* alias_find_result = find(alias, token);
-            
+            char *alias_find_result = find(alias, token);
+
 
             //What we want to do
             //Get the first command from the input
@@ -143,13 +158,13 @@ int sh(int argc, char **argv, char **envp) {
             int num_args = 0;
 
             //If we have an alias for this command
-            if(alias_find_result != NULL){
+            if (alias_find_result != NULL) {
                 //We found it in our alias table, so we have to replace it.
-                char* alias_token = strtok(alias_find_result, " ");
+                char *alias_token = strtok(alias_find_result, " ");
 
                 //Fill up arg array with alias substitution
                 //Preshifts argumets if we have a token
-                while(alias_token){
+                while (alias_token) {
                     len = (int) strlen(alias_token);
                     args[num_args] = (char *) malloc(len);
                     strcpy(BUFFER, alias_token);
@@ -163,11 +178,11 @@ int sh(int argc, char **argv, char **envp) {
 
             free(alias_find_result);
             free(string_input_alias_find);
-            
-            //Reset token to string
-            token = strtok(string_input," ");
 
-            if(alias_find_result != NULL){
+            //Reset token to string
+            token = strtok(string_input, " ");
+
+            if (alias_find_result != NULL) {
                 token = strtok(NULL, " ");
             }
 
@@ -191,11 +206,11 @@ int sh(int argc, char **argv, char **envp) {
                             strcpy(args[num_args], *p);
                             num_args++;
                         }
-                        
+
                         globfree(&paths);
                     }
-                
-                //Else we just add it all to the array
+
+                    //Else we just add it all to the array
                 } else {
                     len = (int) strlen(token);
                     args[num_args] = (char *) malloc(len);
@@ -206,9 +221,9 @@ int sh(int argc, char **argv, char **envp) {
                 num_args++;
             }
 
-            
-            
-            
+
+
+
 
             //Compare to strings in the enum to get to the command
             int command_index = 0;
@@ -271,17 +286,17 @@ int sh(int argc, char **argv, char **envp) {
                     printf("");
                     char *cd_path = args[1];
 
-                    if(num_args > 2){
+                    if (num_args > 2) {
                         perror("cd: Too many arguments");
-                    }else{
+                    } else {
                         //If we have one arg change to the home directory
                         if (num_args == 1) {
                             cd_path = homedir;
-                        //Else change to the directory we give it 
-                        } else if(num_args == 2) {
+                            //Else change to the directory we give it
+                        } else if (num_args == 2) {
                             cd_path = args[1];
                         }
-                        
+
 
                         //In theory we just want to swap the owd with the cwd
                         //But lots of code for swapping two strings because everyone loves C
@@ -331,7 +346,7 @@ int sh(int argc, char **argv, char **envp) {
                     //List current directory for one arg
                     if (num_args == 1) {
                         list(cwd);
-                    //List all of them for the others
+                        //List all of them for the others
                     } else {
                         for (int i = 1; i < MAXARGS; i++) {
                             if (args[i] != NULL) {
@@ -374,7 +389,7 @@ int sh(int argc, char **argv, char **envp) {
                         int id = (int) pid_num;
                         int sig = (int) sig_num;
                         kill(id, sig_num);
-                    //If its two args just send the default SIGTERM
+                        //If its two args just send the default SIGTERM
                     } else if (num_args == 2) {
                         char *pid_str = args[1];
                         char *end;
@@ -409,25 +424,25 @@ int sh(int argc, char **argv, char **envp) {
                     break;
                 case ALIAS:
                     //Set up alias table
-                    if(num_args == 1){
+                    if (num_args == 1) {
                         traverse(alias, MAX_COMMAND_HISTORY, 1);
-                    }else if(num_args == 2){
-                    
-                    }else{
+                    } else if (num_args == 2) {
+
+                    } else {
                         char ALSBUF[BUFFER_SIZE];
                         strcpy(ALSBUF, "");
-                        for(int i = 2; i < MAXARGS; i++){
-                            if(args[i] != NULL){   
+                        for (int i = 2; i < MAXARGS; i++) {
+                            if (args[i] != NULL) {
                                 //Sprintf produced some strange results so use strcat
                                 strcat(ALSBUF, args[i]);
                                 strcat(ALSBUF, " ");
-                            }else{
+                            } else {
                                 break;
                             }
                         }
 
                         int len = strlen(ALSBUF);
-                        ALSBUF[len-1] = '\0';
+                        ALSBUF[len - 1] = '\0';
 
                         alias = append(alias, args[1], ALSBUF);
                     }
@@ -446,8 +461,8 @@ int sh(int argc, char **argv, char **envp) {
                             int arg_int = (int) args_num;
                             traverse(history, arg_int, 0);
                         }
-                    //Default print last 10
-                    } else if (num_args == 1){
+                        //Default print last 10
+                    } else if (num_args == 1) {
                         traverse(history, 10, 0);
                     } else {
                         printf("%s\n", "history: Invalid number of arguments");
@@ -458,13 +473,13 @@ int sh(int argc, char **argv, char **envp) {
                     if (num_args == 1) {
                         printenv(num_args, envp, args);
                     } else if (num_args == 2) {
-                    //Set to empty
+                        //Set to empty
                         setenv(args[1], "", 1);
                     } else if (num_args == 3) {
-                    //Reset vars
+                        //Reset vars
                         setenv(args[1], args[2], 1);
 
-                    //special care for home and path
+                        //special care for home and path
                         if (strcmp(args[1], "HOME") == 0) {
                             homedir = getenv("HOME");
                         } else if (strcmp(args[1], "PATH") == 0) {
@@ -474,6 +489,23 @@ int sh(int argc, char **argv, char **envp) {
                         printf("%s\n", "setenv: Incorrect amount of arguments");
                     }
                     break;
+                case REDIRECT:
+                    //todo
+                    printf("");
+                    int rc = fork();
+                    if (rc < 0) {
+                        fprintf(stderr, "fork failed\n");
+                        exit(1);
+                    } else if (rc == 0) {
+                        printf("hi am smol pid:%d", (int) getpid());
+
+
+                    }
+
+                    break;
+//                case PIPE:
+//                    //todo
+//                    break;
                 default:
                     //Asumme user wants to run an actual command
                     printf("");
@@ -481,41 +513,41 @@ int sh(int argc, char **argv, char **envp) {
 
                     //Check to see if we are an absolute
                     if (args[0][0] == '.' || args[0][0] == '/') {
-                        cmd_path = (char *)malloc(strlen(args[0]));
+                        cmd_path = (char *) malloc(strlen(args[0]));
                         strcpy(cmd_path, args[0]);
                     } else {
                         cmd_path = which(args[0], pathlist);
                     }
 
                     //If the command exits  and we can run it...
-                    int access_result = access(cmd_path, F_OK|X_OK);
+                    int access_result = access(cmd_path, F_OK | X_OK);
 
                     //Run it
                     struct stat path_stat;
                     stat(cmd_path, &path_stat);
-                    
+
                     //Makes sure it's a file
-                    if(access_result == 0 && S_ISREG(path_stat.st_mode)){
+                    if (access_result == 0 && S_ISREG(path_stat.st_mode)) {
                         if (cmd_path != NULL) {
                             printf("[Executing built-in %s from %s...]\n", args[0], cmd_path);
                             pid_t child_pid = fork();
-                            
+
                             if (child_pid == 0) {
                                 int ret = execve(cmd_path, args, envp);
                             }
-                            
+
                             int child_status;
 
-                            if(strcmp(args[num_args-1], "&") == 0){
+                            if (strcmp(args[num_args - 1], "&") == 0) {
                                 waitpid(child_pid, &child_status, WNOHANG);
-                            }else{
+                            } else {
                                 waitpid(child_pid, &child_status, 0);
                             }
-                            
+
                         } else {
                             printf("%s: Command not found\n", args[0]);
                         }
-                    }else{
+                    } else {
                         printf("%s\n", "Invalid Command");
                         printf("Access Error: %i\n", errno);
                     }
@@ -692,3 +724,34 @@ void list(char *dir) {
     closedir(dr);
 } /* list() */
 
+/**
+ * redirectError takes a 0 to *not* redirect error codes, and a 1 if it should
+ * because booleans are overrated apparently
+ *
+ * @param source
+ * @param destination
+ * @param redirectError
+ * @return
+ */
+char *redirect(char *source, char *destination, int redirectError) {
+//    assert(source != NULL);
+//    assert(destination != NULL);
+//
+//
+//
+//    if (redirectError == 1) {
+//        //cool, we're redirecting error codes too
+//    }
+
+
+}
+
+/**
+ * file: test-1+2.c
+ * tiny code that prints something to stdout and stderr
+ * for testing purposes.
+*/
+void testRedirect() {
+    fprintf(stdout, "This is to standard output\n");
+    fprintf(stderr, "This is to standard error\n");
+}
