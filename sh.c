@@ -97,6 +97,7 @@ int sh(int argc, char **argv, char **envp) {
         HISTORY,
         SET_ENV,
         REDIRECT,
+        REDIRECT_ERRORS,
         command_count
     } commands;
 
@@ -115,7 +116,8 @@ int sh(int argc, char **argv, char **envp) {
             "alias",
             "history",
             "setenv",
-            "redirect"
+            "redirect",
+            "&"
     };
 
 
@@ -221,18 +223,22 @@ int sh(int argc, char **argv, char **envp) {
                 num_args++;
             }
 
-
-
-
-
-            //Compare to strings in the enum to get to the command
+            //Compare all of the commands to strings in the enum to route to a specific command
             int command_index = 0;
+            int flag = 0;
 
-            for (command_index = 0; command_index < command_count; ++command_index) {
-                if (strcmp(args[0], command_strings[command_index]) == 0) {
-                    break;
+            for (int arg_index = 0; arg_index < num_args; arg_index++) {
+                for (command_index = 0; command_index < command_count; ++command_index) {
+                    printf("Comparing %s to %s\n", args[arg_index], command_strings[command_index]);
+                    if (strcmp(args[arg_index], command_strings[command_index]) == 0) {
+                        flag = 1;
+                    }
+                    if (flag == 1) { break; }
                 }
+                if (flag == 1) { break; }
             }
+
+            printf("Running command %s\n", command_strings[command_index]);
 
             switch (command_index) {
                 //Exit the shell
@@ -491,7 +497,7 @@ int sh(int argc, char **argv, char **envp) {
                     break;
                 case REDIRECT:
                     //todo
-                    printf("");
+                    printf("Redirect");
                     int rc = fork();
                     if (rc < 0) {
                         fprintf(stderr, "fork failed\n");
@@ -506,6 +512,9 @@ int sh(int argc, char **argv, char **envp) {
 //                case PIPE:
 //                    //todo
 //                    break;
+                case REDIRECT_ERRORS:
+                    printf("REDIRECT_ERRORS");
+                    break;
                 default:
                     //Asumme user wants to run an actual command
                     printf("");
@@ -543,6 +552,12 @@ int sh(int argc, char **argv, char **envp) {
                             } else {
                                 waitpid(child_pid, &child_status, 0);
                             }
+
+                            // why can't c be normal
+                            if (strcmp(args[num_args - 1], ">") == 0) {
+
+                            }
+
 
                         } else {
                             printf("%s: Command not found\n", args[0]);
