@@ -15,6 +15,7 @@ char *where(char *command, struct pathelement *pathlist);
 
 void list(char *dir);
 
+char *redirect(char *source, char *destination, int redirectError);
 
 #define PROMPTMAX 32
 #define MAXARGS 10
