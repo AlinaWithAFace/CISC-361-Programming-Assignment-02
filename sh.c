@@ -96,8 +96,14 @@ int sh(int argc, char **argv, char **envp) {
         ALIAS,
         HISTORY,
         SET_ENV,
+        BACKGROUND,
         REDIRECT,
-        REDIRECT_ERRORS,
+        REDIRECT_STD_ERR,
+        REDIRECT_APPEND,
+        REDIRECT_STD_ERR_APPEND,
+        REVERSE,
+        PIPE,
+        PIPE_STD_ERR,
         command_count
     } commands;
 
@@ -116,8 +122,14 @@ int sh(int argc, char **argv, char **envp) {
             "alias",
             "history",
             "setenv",
-            "redirect",
-            "&"
+            "&",
+            ">",
+            ">&",
+            ">>",
+            ">>&",
+            "<",
+            "|",
+            "|&"
     };
 
 
@@ -495,6 +507,9 @@ int sh(int argc, char **argv, char **envp) {
                         printf("%s\n", "setenv: Incorrect amount of arguments");
                     }
                     break;
+                case BACKGROUND:
+                    //todo? Move a thing over?
+                    break;
                 case REDIRECT:
                     //todo
                     printf("Redirect");
@@ -509,11 +524,23 @@ int sh(int argc, char **argv, char **envp) {
                     }
 
                     break;
-//                case PIPE:
-//                    //todo
-//                    break;
-                case REDIRECT_ERRORS:
-                    printf("REDIRECT_ERRORS");
+                case REDIRECT_STD_ERR:
+                    //todo
+                    break;
+                case REDIRECT_APPEND:
+                    //todo
+                    break;
+                case REDIRECT_STD_ERR_APPEND:
+                    //todo
+                    break;
+                case REVERSE:
+                    //todo
+                    break;
+                case PIPE:
+                    //todo
+                    break;
+                case PIPE_STD_ERR:
+                    //todo
                     break;
                 default:
                     //Asumme user wants to run an actual command
