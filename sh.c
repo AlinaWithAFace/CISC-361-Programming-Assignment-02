@@ -22,6 +22,8 @@
 #include <glob.h>
 #include "linked_list.h"
 #include <assert.h>
+#include <sys/fcntl.h>
+#include <hdf5_hl.h>
 
 #define BUFFER_SIZE 1000
 #define MAX_COMMAND_HISTORY 999
@@ -133,7 +135,7 @@ int sh(int argc, char **argv, char **envp) {
     };
 
 
-    /*
+    /**
         Main Shell Loop
     */
     while (go) {
@@ -241,7 +243,7 @@ int sh(int argc, char **argv, char **envp) {
 
             for (int arg_index = 0; arg_index < num_args; arg_index++) {
                 for (command_index = 0; command_index < command_count; ++command_index) {
-                    //printf("Comparing %s to %s\n", args[arg_index], command_strings[command_index]);
+                    printf("Comparing %s to %s\n", args[arg_index], command_strings[command_index]);
                     if (strcmp(args[arg_index], command_strings[command_index]) == 0) {
                         flag = 1;
                     }
@@ -250,7 +252,7 @@ int sh(int argc, char **argv, char **envp) {
                 if (flag == 1) { break; }
             }
 
-            //printf("Running command %s\n", command_strings[command_index]);
+            printf("Running command %s\n", command_strings[command_index]);
 
             switch (command_index) {
                 //Exit the shell
@@ -263,14 +265,14 @@ int sh(int argc, char **argv, char **envp) {
                     } else {
                         //Iterate though all following args
                         //Print out more than one if it exits
-                        for (int i = 1; i < MAXARGS; i++) {
-                            if (args[i] != NULL) {
-                                char *result = which(args[i], pathlist);
+                        for (int arg_index = 1; arg_index < MAXARGS; arg_index++) {
+                            if (args[arg_index] != NULL) {
+                                char *result = which(args[arg_index], pathlist);
                                 if (result != NULL) {
                                     printf("%s\n", result);
                                     free(result);
                                 } else {
-                                    printf("%s not found\n", args[i]);
+                                    printf("%s not found\n", args[arg_index]);
                                 }
                             } else {
                                 break;
@@ -437,7 +439,7 @@ int sh(int argc, char **argv, char **envp) {
                     }
                     break;
                 case PRINT_ENV:
-                    //Print our enviornment
+                    //Print our environment
                     printenv(num_args, envp, args);
                     break;
                 case ALIAS:
@@ -511,18 +513,27 @@ int sh(int argc, char **argv, char **envp) {
                     //todo? Move a thing over?
                     break;
                 case REDIRECT:
-                    //todo
-                    printf("Redirect");
+                    printf("");
                     int rc = fork();
                     if (rc < 0) {
                         fprintf(stderr, "fork failed\n");
                         exit(1);
                     } else if (rc == 0) {
                         printf("hi am smol pid:%d", (int) getpid());
+                        //close(STDOUT_FILENO);
+                        int fid = open("p4.output", O_WRONLY, O_CREAT, O_TRUNC);
 
+                        //int fid = open(args[4], O_WRONLY | O_CREAT | O_TRUNC);
+                        close(1);
+                        dup(fid);
+                        close(fid);
 
+                        execvp(args[1], &args[4]);
+
+                    } else {
+                        //int rc_wait = wait(NULL);
                     }
-
+                    printf("Did it?");
                     break;
                 case REDIRECT_STD_ERR:
                     //todo
