@@ -241,7 +241,7 @@ int sh(int argc, char **argv, char **envp) {
 
             for (int arg_index = 0; arg_index < num_args; arg_index++) {
                 for (command_index = 0; command_index < command_count; ++command_index) {
-                    printf("Comparing %s to %s\n", args[arg_index], command_strings[command_index]);
+                    //printf("Comparing %s to %s\n", args[arg_index], command_strings[command_index]);
                     if (strcmp(args[arg_index], command_strings[command_index]) == 0) {
                         flag = 1;
                     }
@@ -250,7 +250,7 @@ int sh(int argc, char **argv, char **envp) {
                 if (flag == 1) { break; }
             }
 
-            printf("Running command %s\n", command_strings[command_index]);
+            //printf("Running command %s\n", command_strings[command_index]);
 
             switch (command_index) {
                 //Exit the shell
@@ -543,7 +543,7 @@ int sh(int argc, char **argv, char **envp) {
                     //todo
                     break;
                 default:
-                    //Asumme user wants to run an actual command
+                    //Assume user wants to run an actual command
                     printf("");
                     char *cmd_path;
 
