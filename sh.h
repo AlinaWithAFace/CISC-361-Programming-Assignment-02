@@ -11,6 +11,8 @@ char *which(char *command, struct pathelement *pathlist);
 
 char *where(char *command, struct pathelement *pathlist);
 
+void *watchmail_thread(void *arg);
+
 void list(char *dir);
 
 

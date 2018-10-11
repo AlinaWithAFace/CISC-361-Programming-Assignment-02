@@ -5,6 +5,7 @@
 */
 
 #include <stdio.h>
+#include <pthread.h> 
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -21,6 +22,7 @@
 #include "sh.h"
 #include <glob.h>
 #include "linked_list.h"
+#include "watchmail_list.h"
 
 #define BUFFER_SIZE 1000
 #define MAX_COMMAND_HISTORY 999
@@ -43,6 +45,7 @@ int sh(int argc, char **argv, char **envp) {
 
     struct Node *history = NULL;
     struct Node *alias = NULL;
+    struct MailNode *watchmail = NULL;
 
     int uid, i, status, argsct, go = 1;
     struct passwd *password_entry;
@@ -95,12 +98,14 @@ int sh(int argc, char **argv, char **envp) {
                 ALIAS,
                 HISTORY,
                 SET_ENV,
+                WATCHUSER,
+                WATCHMAIL,
                 command_count
             } commands;
 
     char *command_strings[] = {
             "exit", "which", "where", "cd", "getcwd", "pwd", "list", "pid", "kill", "prompt", "printenv",
-            "alias", "history", "setenv"
+            "alias", "history", "setenv", "watchuser", "watchmail"
     };
 
 
@@ -474,6 +479,40 @@ int sh(int argc, char **argv, char **envp) {
                         printf("%s\n", "setenv: Incorrect amount of arguments");
                     }
                     break;
+
+                case WATCHUSER:
+                    printf("Watching users\n");
+                    break;
+                case WATCHMAIL:
+                    printf("Watching mail\n");
+
+                    if(num_args == 2){
+                        struct stat buffer;
+                        int exist = stat(args[1],&buffer);
+                        if(exist == 0){
+                            pthread_t thread_id;
+                    
+                            char* filepath = (char *)malloc(strlen(args[1]));
+                            strcpy(filepath, args[1]);
+                            pthread_create(&thread_id, NULL, watchmail_thread, (void *)filepath);
+                            watchmail = mailAppend(watchmail, filepath, thread_id);
+                        }else{
+                            printf("watchmail: %s does not exist\n", args[1]);
+                        }
+                        
+                    }else if(num_args == 3){
+                        if(strcmp(args[2], "off") == 0){
+                            watchmail = mailListRemoveNode(watchmail,args[1]);
+                        }else{
+                            printf("watchmail: Wrong third argument\n");
+                        }
+                    }else{
+                        printf("watchmail: Invalid amount of arguments\n");
+                    }
+
+                    
+
+                    break;
                 default:
                     //Asumme user wants to run an actual command
                     printf("");
@@ -537,6 +576,7 @@ int sh(int argc, char **argv, char **envp) {
     //Free ALL the variables
     freeAll(history);
     freeAll(alias);
+    mailFreeAll(watchmail);
     free(prompt);
     free(owd);
     free(cwd);
@@ -560,6 +600,39 @@ int sh(int argc, char **argv, char **envp) {
     return 0;
 } /* sh() */
 
+
+void *watchuser_thread(void *arg){
+    
+}
+
+
+void *watchmail_thread(void *arg){
+    //char* name = (char*)arg;
+    
+
+
+    char* filepath = (char*)arg;
+    struct stat stat_path; 
+
+    stat(filepath, &stat_path);
+    long old_size = (long)stat_path.st_size;
+
+    time_t curtime;
+    while(1){
+        time(&curtime);
+
+        stat(filepath, &stat_path);
+        if((long)stat_path.st_size != old_size){
+            printf("\a\nBEEP! You got mail in %s at time %s\n", filepath, ctime(&curtime));
+            fflush(stdout);
+            old_size = (long)stat_path.st_size;
+        }
+        sleep(1);
+
+    }
+
+    
+}
 
 //Print enviornment variables
 void printenv(int num_args, char **envp, char **args) {
