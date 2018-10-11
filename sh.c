@@ -532,6 +532,12 @@ int sh(int argc, char **argv, char **envp) {
                     //Run it
                     struct stat path_stat;
                     stat(cmd_path, &path_stat);
+
+                    int has_background = strcmp(args[num_args-1], "&");
+
+                    if(has_background == 0){
+                        args[num_args-1] = NULL;
+                    }
                     
                     //Makes sure it's a file
                     if(access_result == 0 && S_ISREG(path_stat.st_mode)){
@@ -540,12 +546,13 @@ int sh(int argc, char **argv, char **envp) {
                             pid_t child_pid = fork();
                             
                             if (child_pid == 0) {
+
                                 int ret = execve(cmd_path, args, envp);
                             }
                             
                             int child_status;
 
-                            if(strcmp(args[num_args-1], "&") == 0){
+                            if(has_background == 0){
                                 waitpid(child_pid, &child_status, WNOHANG);
                             }else{
                                 waitpid(child_pid, &child_status, 0);
