@@ -43,9 +43,10 @@ pthread_mutex_t lock;
 //TODO I don't know whats up with this
 void *watchuser_thread(void *arg){
     struct utmpx *up;
-    setutxent();
+    //setutxent();
 
     while(1){
+        setutxent();
         while(up = getutxent()){
             if ( up->ut_type == USER_PROCESS )	/* only care about users */
             {
