@@ -5,6 +5,8 @@
 */
 
 #include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <pthread.h> 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -38,6 +40,7 @@ void handle_sigchild(int sig) {
 
 pthread_mutex_t lock;
 
+//TODO I don't know whats up with this
 void *watchuser_thread(void *arg){
     struct utmpx *up;
     setutxent();
@@ -49,7 +52,7 @@ void *watchuser_thread(void *arg){
                 printf("\n%s has logged on %s from %s\n", up->ut_user, up->ut_line, up ->ut_host);
             }
         }
-        print("FFFFF\n");
+        //printf("FFFFF\n");
         //pthread_mutex_lock(&lock);
         //DO THING
         //pthread_mutex_unlock(&lock);
@@ -272,15 +275,10 @@ int sh(int argc, char **argv, char **envp) {
             int command_index = 0;
             int flag = 0;
 
-            for (int arg_index = 0; arg_index < num_args; arg_index++) {
-                for (command_index = 0; command_index < command_count; ++command_index) {
-                    //printf("Comparing %s to %s\n", args[arg_index], command_strings[command_index]);
-                    if (strcmp(args[arg_index], command_strings[command_index]) == 0) {
-                        flag = 1;
-                    }
-                    if (flag == 1) { break; }
+            for (command_index = 0; command_index < command_count; ++command_index) {
+                if (strcmp(args[0], command_strings[command_index]) == 0) {
+                    break;
                 }
-                if (flag == 1) { break; }
             }
 
             //printf("Running command %s\n", command_strings[command_index]);
@@ -604,15 +602,19 @@ int sh(int argc, char **argv, char **envp) {
 
                     break;
                 case REDIRECT_STD_ERR:
+                    printf("STERRR\n");
                     //todo
                     break;
                 case REDIRECT_APPEND:
+                    printf("APPEND\n");
                     //todo
                     break;
                 case REDIRECT_STD_ERR_APPEND:
                     //todo
+                    printf("STERERRRAPPEND\n");
                     break;
                 case REVERSE:
+                printf("REVERSE\n");
                     //todo
                     break;
                 case PIPE:
@@ -654,6 +656,33 @@ int sh(int argc, char **argv, char **envp) {
                             pid_t child_pid = fork();
 
                             if (child_pid == 0) {
+                                int redirect_index = -1;
+                                //See if we have any redirects
+                                for(int i = 0; i < num_args; i++){
+                                    if(strcmp(args[i], ">") == 0
+                                        || strcmp(args[i], ">&") == 0
+                                        || strcmp(args[i], ">>") == 0
+                                        || strcmp(args[i], ">>&") == 0
+                                        || strcmp(args[i], "<") == 0){
+                                        redirect_index = i;
+                                    }
+                                }
+                                
+                                if(redirect_index != -1){
+                                    
+                                    if(strcmp(args[redirect_index], ">") == 0){
+
+                                        int fid = open(args[redirect_index+1], O_WRONLY|O_CREAT|O_TRUNC);
+                                        close(STDOUT_FILENO);
+                                        dup(fid);
+
+                                        for(int i = redirect_index; i < num_args; i++){
+                                            args[i] = NULL;
+                                        }
+                                    }
+
+
+                                }
 
                                 int ret = execve(cmd_path, args, envp);
                             }
@@ -664,11 +693,6 @@ int sh(int argc, char **argv, char **envp) {
                                 waitpid(child_pid, &child_status, WNOHANG);
                             } else {
                                 waitpid(child_pid, &child_status, 0);
-                            }
-
-                            // why can't c be normal
-                            if (strcmp(args[num_args - 1], ">") == 0) {
-
                             }
 
 
