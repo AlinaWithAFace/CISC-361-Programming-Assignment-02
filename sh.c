@@ -46,12 +46,13 @@ void *watchuser_thread(void *arg){
         while(up = getutxent()){
             if ( up->ut_type == USER_PROCESS )	/* only care about users */
             {
-                printf("%s has logged on %s from %s\n", up->ut_user, up->ut_line, up ->ut_host);
+                printf("\n%s has logged on %s from %s\n", up->ut_user, up->ut_line, up ->ut_host);
             }
         }
-        pthread_mutex_lock(&lock);
+        print("FFFFF\n");
+        //pthread_mutex_lock(&lock);
         //DO THING
-        pthread_mutex_unlock(&lock);
+        //pthread_mutex_unlock(&lock);
         sleep(1);
     }
 }
