@@ -47,9 +47,7 @@ struct MailNode* mailListRemoveNode(struct MailNode* head, char* filepath){
     //At head of list
     if(strcmp(current->filepath, filepath) == 0){
         head = current->next;
-        printf("AAAA\n");
         freeMailNode(current);
-        //printf("BBB\n");
         return head;
     }
 

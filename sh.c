@@ -23,6 +23,8 @@
 #include <glob.h>
 #include "linked_list.h"
 #include "watchmail_list.h"
+#include "watchuser_list.h"
+#include <utmpx.h>
 
 #define BUFFER_SIZE 1000
 #define MAX_COMMAND_HISTORY 999
@@ -33,7 +35,29 @@ void handle_sigchild(int sig){
     //printf("Reaped Children!\n");
 }
 
+pthread_mutex_t lock;
+
+void *watchuser_thread(void *arg){
+    struct utmpx *up;
+    setutxent();
+
+    while(1){
+        while(up = getutxent()){
+            if ( up->ut_type == USER_PROCESS )	/* only care about users */
+            {
+                printf("%s has logged on %s from %s\n", up->ut_user, up->ut_line, up ->ut_host);
+            }
+        }
+        pthread_mutex_lock(&lock);
+        //DO THING
+        pthread_mutex_unlock(&lock);
+        sleep(1);
+    }
+}
+
 int sh(int argc, char **argv, char **envp) {
+    pthread_t watchuser_threadid;
+    int watching_users = 0;
 
     //Defining variables
     //Temp buffer
@@ -46,6 +70,7 @@ int sh(int argc, char **argv, char **envp) {
     struct Node *history = NULL;
     struct Node *alias = NULL;
     struct MailNode *watchmail = NULL;
+    struct UserNode *watchuser = NULL;
 
     int uid, i, status, argsct, go = 1;
     struct passwd *password_entry;
@@ -482,6 +507,18 @@ int sh(int argc, char **argv, char **envp) {
 
                 case WATCHUSER:
                     printf("Watching users\n");
+                    
+                    if(watching_users == 0){
+                        char* user = (char *)malloc(strlen(args[1]));
+                        pthread_mutex_lock(&lock);
+                        watchuser = userAppend(watchuser, user);
+                        pthread_mutex_unlock(&lock);
+                        pthread_create(&watchuser_threadid, NULL, watchuser_thread, (void *)user);
+                        watching_users = 1;
+                    }
+
+                    
+
                     break;
                 case WATCHMAIL:
                     printf("Watching mail\n");
@@ -608,15 +645,8 @@ int sh(int argc, char **argv, char **envp) {
 } /* sh() */
 
 
-void *watchuser_thread(void *arg){
-    
-}
-
 
 void *watchmail_thread(void *arg){
-    //char* name = (char*)arg;
-    
-
 
     char* filepath = (char*)arg;
     struct stat stat_path; 

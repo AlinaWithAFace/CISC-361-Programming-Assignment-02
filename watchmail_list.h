@@ -14,7 +14,6 @@ void freeMailNode(struct MailNode*);
 
 struct MailNode* mailListRemoveNode(struct MailNode*, char*);
 
-
 void mailTraverse(struct MailNode*);
 
 void mailFreeAll(struct MailNode*);
