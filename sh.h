@@ -15,5 +15,7 @@ void list(char *dir);
 
 char *redirect(char *source, char *destination, int redirectError);
 
+void shell_pipe(char *args);
+
 #define PROMPTMAX 32
 #define MAXARGS 100

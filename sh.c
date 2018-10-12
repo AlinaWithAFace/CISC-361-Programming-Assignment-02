@@ -548,7 +548,7 @@ int sh(int argc, char **argv, char **envp) {
                     //todo
                     break;
                 case PIPE:
-                    //todo
+                    shell_pipe(*args);
                     break;
                 case PIPE_STD_ERR:
                     //todo
@@ -807,4 +807,36 @@ char *redirect(char *source, char *destination, int redirectError) {
 void testRedirect() {
     fprintf(stdout, "This is to standard output\n");
     fprintf(stderr, "This is to standard error\n");
+}
+
+
+void shell_pipe(char *args) {
+    int pipeBufferSize = 1000;
+    int pipeEnds[2];
+
+    pipe(pipeEnds);
+
+    int returnCode = fork();
+
+    if (returnCode == 0) {
+
+        close(pipeEnds[1]);
+
+
+        /// Sample read from pipe
+        //char data[14];
+        //read(pipeEnds[0], data, 14);
+
+        char data[pipeBufferSize];
+        read(pipeEnds[0], data, sizeof(pipeBufferSize));
+
+    } else {
+
+        close(pipeEnds[0]);
+
+        /// Sample write to pipe
+        //write(pipeEnds[1], "Hello, sweet child!\n", 14);
+
+        write(pipeEnds[1], (const void *) args[1], sizeof(pipeBufferSize));
+    }
 }
