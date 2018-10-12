@@ -13,7 +13,7 @@ struct UserNode* userAppend(struct UserNode* head, char* user){
         }
     }
 
-    struct UserNode* new = (struct MailNode*)malloc(sizeof(struct UserNode));
+    struct UserNode* new = (struct UserNode*)malloc(sizeof(struct UserNode));
 
     new->user = user;
 
@@ -35,7 +35,7 @@ struct UserNode* userListRemoveNode(struct UserNode* head, char* user){
     //At head of list
     if(strcmp(current->user, user) == 0){
         head = current->next;
-        freeMailNode(current);
+        freeUserNode(current);
         return head;
     }
 
