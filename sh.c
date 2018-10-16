@@ -39,6 +39,7 @@ void handle_sigchild(int sig) {
 }
 
 pthread_mutex_t lock;
+struct UserNode *watchuser = NULL;
 
 //TODO I don't know whats up with this
 void *watchuser_thread(void *arg){
@@ -50,7 +51,16 @@ void *watchuser_thread(void *arg){
         while(up = getutxent()){
             if ( up->ut_type == USER_PROCESS )	/* only care about users */
             {
-                printf("\n%s has logged on %s from %s\n", up->ut_user, up->ut_line, up ->ut_host);
+                pthread_mutex_lock(&lock);
+                struct UserNode* user = findUser(watchuser, up->ut_user);
+                if(user != NULL){
+                    if(user->logged_on == 0){
+                        printf("\n%s has logged on %s from %s\n", up->ut_user, up->ut_line, up ->ut_host);
+                        user->logged_on = 1;
+                    }
+                }
+                pthread_mutex_unlock(&lock);
+                
             }
         }
         //printf("FFFFF\n");
@@ -77,7 +87,7 @@ int sh(int argc, char **argv, char **envp) {
     struct Node *history = NULL;
     struct Node *alias = NULL;
     struct MailNode *watchmail = NULL;
-    struct UserNode *watchuser = NULL;
+    
 
     int uid, i, status, argsct, go = 1;
     struct passwd *password_entry;
@@ -528,18 +538,24 @@ int sh(int argc, char **argv, char **envp) {
                     break;
 
                 case WATCHUSER:
-                    printf("Watching users\n");
-                    
-                    if(watching_users == 0){
+                    if(num_args == 2){
+                        printf("Watching user %s\n", args[1]);
+
                         char* user = (char *)malloc(strlen(args[1]));
+                        strcpy(user, args[1]);
+                        
                         pthread_mutex_lock(&lock);
                         watchuser = userAppend(watchuser, user);
                         pthread_mutex_unlock(&lock);
-                        pthread_create(&watchuser_threadid, NULL, watchuser_thread, (void *)user);
-                        watching_users = 1;
-                    }
 
-                    
+                        //Spin up thread if it doesn't exist
+                        if(watching_users == 0){
+                            pthread_create(&watchuser_threadid, NULL, watchuser_thread, NULL);
+                            watching_users = 1;
+                        }
+                    }else{
+                        printf("watchuser: Not enough arguments\n");
+                    }
 
                     break;
                 case WATCHMAIL:
@@ -568,8 +584,6 @@ int sh(int argc, char **argv, char **envp) {
                     }else{
                         printf("watchmail: Invalid amount of arguments\n");
                     }
-
-                    
 
                     break;
                 case NOCLOBBER:
@@ -643,7 +657,6 @@ int sh(int argc, char **argv, char **envp) {
                                         exists = 1;
                                     }
                                     
-
                                     
                                     //Overwrite
                                     if(strcmp(redirect_string, ">") == 0){
@@ -749,6 +762,13 @@ int sh(int argc, char **argv, char **envp) {
     freeAll(history);
     freeAll(alias);
     mailFreeAll(watchmail);
+
+    userFreeAll(watchuser);
+    if(watching_users == 1){
+        pthread_cancel(watchuser_threadid);
+        pthread_join(watchuser_threadid, NULL);
+    }
+    
     free(prompt);
     free(owd);
     free(cwd);

@@ -16,6 +16,7 @@ struct UserNode* userAppend(struct UserNode* head, char* user){
     struct UserNode* new = (struct UserNode*)malloc(sizeof(struct UserNode));
 
     new->user = user;
+    new->logged_on = 0;
 
     new->next = NULL;
     strcpy(new->user, user);
@@ -27,6 +28,19 @@ struct UserNode* userAppend(struct UserNode* head, char* user){
     }
 
     return head;
+}
+
+struct UserNode* findUser(struct UserNode* head, char* user){
+    struct UserNode* current = head;
+
+    while(current != NULL){
+        if(strcmp(user, current->user) == 0){
+            return current;
+        }
+        current = current->next;
+    }
+
+    return NULL;
 }
 
 struct UserNode* userListRemoveNode(struct UserNode* head, char* user){
@@ -58,4 +72,14 @@ struct UserNode* userListRemoveNode(struct UserNode* head, char* user){
 void freeUserNode(struct UserNode* node){
     free(node->user);
     free(node);
+}
+
+void userFreeAll(struct UserNode* head){
+    struct UserNode* current = head;
+    while(current != NULL){
+        struct UserNode* toDelete = current;
+        current = current->next;
+        free(toDelete->user);
+        free(toDelete);
+    }
 }
