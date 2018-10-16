@@ -860,25 +860,28 @@ char *which(char *command, struct pathelement *pathlist) {
         //vars for looking though the directories
         dr = opendir(path);
 
+        if(dr){
+
         //in each path, look at all of it's files
-        while ((de = readdir(dr)) != NULL) {
+            while ((de = readdir(dr)) != NULL) {
 
 
-            //for each file in the directory, check if it's the one we want
-            if (strcmp(de->d_name, command) == 0) {
-                //cat together the full filename
-                strcpy(CAT_BUFFER, path);
-                strcat(CAT_BUFFER, "/");
-                strcat(CAT_BUFFER, de->d_name);
+                //for each file in the directory, check if it's the one we want
+                if (strcmp(de->d_name, command) == 0) {
+                    //cat together the full filename
+                    strcpy(CAT_BUFFER, path);
+                    strcat(CAT_BUFFER, "/");
+                    strcat(CAT_BUFFER, de->d_name);
 
-                //create a string pointer and return it
-                int len = (int) strlen(CAT_BUFFER);
-                char *p = (char *) malloc(len);
-                strcpy(p, CAT_BUFFER);
+                    //create a string pointer and return it
+                    int len = (int) strlen(CAT_BUFFER);
+                    char *p = (char *) malloc(len);
+                    strcpy(p, CAT_BUFFER);
 
-                closedir(dr);
+                    closedir(dr);
 
-                return p;
+                    return p;
+                }
             }
         }
         closedir(dr);
@@ -908,18 +911,21 @@ char *where(char *command, struct pathelement *pathlist) {
         dr = opendir(path);
         // printf("Dir closed");
 
+        if(dr){
         //in each path, look at all of it's files
-        while ((de = readdir(dr)) != NULL) {
+            while ((de = readdir(dr)) != NULL) {
 
 
-            //for each file in the directory, check if it's the one we want
-            if (strcmp(de->d_name, command) == 0) {
-                //If it is add it to the buffer
-                strcat(CAT_BUFFER, path);
-                strcat(CAT_BUFFER, "/");
-                strcat(CAT_BUFFER, de->d_name);
-                strcat(CAT_BUFFER, "\n");
+                //for each file in the directory, check if it's the one we want
+                if (strcmp(de->d_name, command) == 0) {
+                    //If it is add it to the buffer
+                    strcat(CAT_BUFFER, path);
+                    strcat(CAT_BUFFER, "/");
+                    strcat(CAT_BUFFER, de->d_name);
+                    strcat(CAT_BUFFER, "\n");
+                }
             }
+
         }
         closedir(dr);
 
