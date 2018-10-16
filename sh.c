@@ -64,6 +64,7 @@ void *watchuser_thread(void *arg){
 int sh(int argc, char **argv, char **envp) {
     pthread_t watchuser_threadid;
     int watching_users = 0;
+    int noclobber = 0;
 
     //Defining variables
     //Temp buffer
@@ -131,14 +132,7 @@ int sh(int argc, char **argv, char **envp) {
         SET_ENV,
         WATCHUSER,
         WATCHMAIL,
-        BACKGROUND,
-        REDIRECT,
-        REDIRECT_STD_ERR,
-        REDIRECT_APPEND,
-        REDIRECT_STD_ERR_APPEND,
-        REVERSE,
-        PIPE,
-        PIPE_STD_ERR,
+        NOCLOBBER,
         command_count
     } commands;
 
@@ -159,14 +153,7 @@ int sh(int argc, char **argv, char **envp) {
             "setenv",
             "watchuser",
             "watchmail",
-            "&",
-            ">",
-            ">&",
-            ">>",
-            ">>&",
-            "<",
-            "|",
-            "|&"
+            "noclobber"
     };
 
 
@@ -585,44 +572,15 @@ int sh(int argc, char **argv, char **envp) {
                     
 
                     break;
-                case BACKGROUND:
-                    //todo? Move a thing over?
-                    break;
-                case REDIRECT:
-                    //todo
-                    printf("Redirect");
-                    int rc = fork();
-                    if (rc < 0) {
-                        fprintf(stderr, "fork failed\n");
-                        exit(1);
-                    } else if (rc == 0) {
-                        printf("hi am smol pid:%d", (int) getpid());
-
-
+                case NOCLOBBER:
+                    //Toggles noclobber
+                    if(noclobber == 0){
+                        printf("Noclobber on!\n");
+                        noclobber = 1;
+                    }else{
+                        printf("Noclobber off!\n");
+                        noclobber = 0;
                     }
-
-                    break;
-                case REDIRECT_STD_ERR:
-                    printf("STERRR\n");
-                    //todo
-                    break;
-                case REDIRECT_APPEND:
-                    printf("APPEND\n");
-                    //todo
-                    break;
-                case REDIRECT_STD_ERR_APPEND:
-                    //todo
-                    printf("STERERRRAPPEND\n");
-                    break;
-                case REVERSE:
-                printf("REVERSE\n");
-                    //todo
-                    break;
-                case PIPE:
-                    //todo
-                    break;
-                case PIPE_STD_ERR:
-                    //todo
                     break;
                 default:
                     //Assume user wants to run an actual command
@@ -669,23 +627,91 @@ int sh(int argc, char **argv, char **envp) {
                                     }
                                 }
                                 
+
+                                int execute = 1;
+
                                 if(redirect_index != -1){
+                                    char* file_dest = args[redirect_index+1];
+                                    char* redirect_string = args[redirect_index];
                                     
-                                    if(strcmp(args[redirect_index], ">") == 0){
+                                    int permissions = 0666;
+                                    int exists = 0;
 
-                                        int fid = open(args[redirect_index+1], O_WRONLY|O_CREAT|O_TRUNC);
-                                        close(STDOUT_FILENO);
-                                        dup(fid);
+                                    struct stat st;
 
-                                        for(int i = redirect_index; i < num_args; i++){
-                                            args[i] = NULL;
+                                    if(stat(file_dest, &st) == 0){
+                                        exists = 1;
+                                    }
+                                    
+
+                                    
+                                    //Overwrite
+                                    if(strcmp(redirect_string, ">") == 0){
+                                        if(noclobber == 1 && exists == 1){
+                                            printf("Noclobber on! Cannot overwrite %s\n", file_dest);
+                                            execute = 0;
+                                        }else{
+                                            int fid = open(file_dest, O_WRONLY|O_CREAT|O_TRUNC, permissions);
+                                            close(STDOUT_FILENO);
+                                            dup(fid);
+                                            close(fid);
+                                        }
+                                    }else if(strcmp(redirect_string, ">&") == 0){
+                                        if(noclobber == 1 && exists == 1){
+                                            printf("Noclobber on! Cannot overwrite %s\n", file_dest);
+                                            execute = 0;
+                                        }else{
+                                            int fid = open(file_dest, O_WRONLY|O_CREAT|O_TRUNC, permissions);
+                                            close(STDOUT_FILENO);
+                                            dup(fid);
+                                            close(STDERR_FILENO);
+                                            dup(fid);
+                                            close(fid);
+                                        }
+                                    }else if(strcmp(redirect_string, ">>") == 0){
+                                        if(noclobber == 1 && exists == 0){
+                                            printf("Noclobber on! File %s does not exist\n", file_dest);
+                                            execute = 0;
+                                        }else{
+                                            int fid = open(file_dest, O_WRONLY|O_CREAT|O_APPEND, permissions);
+                                            close(STDOUT_FILENO);
+                                            dup(fid);
+                                            close(fid);
+                                        }
+                                    }else if(strcmp(redirect_string, ">>&") == 0){
+                                        if(noclobber == 1 && exists == 0){
+                                            printf("Noclobber on! File %s does not exist\n", file_dest);
+                                            execute = 0;
+                                        }else{
+                                            int fid = open(file_dest, O_WRONLY|O_CREAT|O_APPEND, permissions);
+                                            close(STDOUT_FILENO);
+                                            dup(fid);
+                                            close(STDERR_FILENO);
+                                            dup(fid);
+                                            close(fid);
+                                        }
+                                    }else if(strcmp(redirect_string, "<") == 0){
+                                        if(stat(file_dest, &st) == -1){
+                                            printf("Error opening %s\n", file_dest);
+                                            execute = 0;
+                                        }else{
+                                            int fid = open(file_dest, O_RDONLY);
+                                            close(STDIN_FILENO);
+                                            dup(fid);
+                                            close(fid);
                                         }
                                     }
 
-
+                                    for(int i = redirect_index; i < num_args; i++){
+                                            args[i] = NULL;
+                                    }
                                 }
 
-                                int ret = execve(cmd_path, args, envp);
+                                if(execute == 1){
+                                    int ret = execve(cmd_path, args, envp);
+                                }else{
+                                    exit(0);
+                                }
                             }
 
                             int child_status;
@@ -735,6 +761,11 @@ int sh(int argc, char **argv, char **envp) {
     //Very strange behavior here
     //Apparently you only have to free the first element of the path list and it's okay?
     //No memory leaks reported...
+
+    //Theory:
+    //Strtok just points to elements of the input string
+    //All subsequent elements are just pointers to the original string
+    //So freeing the first one is ok
     free(current->element);
 
     //Free the rest of the nodes
