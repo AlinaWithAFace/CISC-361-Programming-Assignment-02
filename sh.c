@@ -281,10 +281,14 @@ int sh(int argc, char **argv, char **envp) {
 
             int piped = 0;
             int pipeindex = -1;
+            int pipe_error = 0;
 
             //Detect if we have a pipe!
             for(int i = 0; i < num_args; i++){
                 if(strcmp(args[i], "|") == 0 || strcmp(args[i], "|&") == 0){
+                    if(strcmp(args[i], "|&") == 0){
+                        pipe_error = 1;
+                    }
                     piped = 1;
                     pipeindex = i;
                     break;
@@ -307,6 +311,8 @@ int sh(int argc, char **argv, char **envp) {
                     break;
                 }
             }
+
+            
 
             //If we have a pipe
 
@@ -353,9 +359,16 @@ int sh(int argc, char **argv, char **envp) {
                 
 
                 if(first_child == 0){
+                    if(pipe_error){
+                        close(STDERR_FILENO);
+                        dup(pfds[1]);
+                    }
+
                     close(STDOUT_FILENO);
                     dup(pfds[1]);
                     close(pfds[0]);
+
+
 
                     run_command(command_index, args, pathlist, num_args, envp, 0);
                     //execute_external(args, pathlist, num_args, envp, 0);
