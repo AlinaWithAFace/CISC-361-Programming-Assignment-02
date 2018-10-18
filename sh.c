@@ -298,6 +298,16 @@ int sh(int argc, char **argv, char **envp) {
             int first_child = -1;
             int second_child = -1;
 
+            //Compare all of the commands to strings in the enum to route to a specific command
+            int command_index = 0;
+            int flag = 0;
+
+            for (command_index = 0; command_index < command_count; ++command_index) {
+                if (strcmp(args[0], command_strings[command_index]) == 0) {
+                    break;
+                }
+            }
+
             //If we have a pipe
 
             //Our parent args should be before the pipe
@@ -347,7 +357,8 @@ int sh(int argc, char **argv, char **envp) {
                     dup(pfds[1]);
                     close(pfds[0]);
 
-                    execute_external(args, pathlist, num_args, envp, 0);
+                    run_command(command_index, args, pathlist, num_args, envp, 0);
+                    //execute_external(args, pathlist, num_args, envp, 0);
 
                     exit(0);
                 }else{
@@ -362,7 +373,7 @@ int sh(int argc, char **argv, char **envp) {
                         close(STDIN_FILENO);
                         dup(pfds[0]);
                         close(pfds[1]);
-            
+                        
                         execute_external(piped_args, pathlist, piped_arg_nums, envp, 1);
 
                         exit(0);
@@ -380,352 +391,15 @@ int sh(int argc, char **argv, char **envp) {
 
                         free(piped_args);
                     }
-                    //Still parent
                 }
                
             }
             
-            
+        
 
-
-            //Compare all of the commands to strings in the enum to route to a specific command
-            int command_index = 0;
-            int flag = 0;
-
-            for (command_index = 0; command_index < command_count; ++command_index) {
-                if (strcmp(args[0], command_strings[command_index]) == 0) {
-                    break;
-                }
-            }
-
-            //printf("Running command %s\n", command_strings[command_index]);
-
-            
+            //If not piped    
             if(piped == 0){
-                run_command(command_index, args, pathlist, num_args, envp);
-                /*
-                switch (command_index) {
-                    //Exit the shell
-                    case EXIT:
-                        go = 0;
-                        break;
-                    case WHICH:
-                        if (args[1] == NULL) {
-                            printf("%s", "which: Too few arguments.\n");
-                        } else {
-                            //Iterate though all following args
-                            //Print out more than one if it exits
-                            for (int i = 1; i < MAXARGS; i++) {
-                                if (args[i] != NULL) {
-                                    char *result = which(args[i], pathlist);
-                                    if (result != NULL) {
-                                        printf("%s\n", result);
-                                        free(result);
-                                    } else {
-                                        printf("%s not found\n", args[i]);
-                                    }
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    case WHERE:
-                        if (args[1] == NULL) {
-                            printf("%s", "where: Too few arguments.\n");
-                        } else {
-                            //Iterate though all following args
-                            //Print out more than one if it exits
-                            for (int i = 1; i < MAXARGS; i++) {
-                                if (args[i] != NULL) {
-                                    char *result = where(args[i], pathlist);
-                                    if (result != NULL) {
-                                        printf("%s\n", result);
-                                        free(result);
-                                    } else {
-                                        printf("%s not found\n", args[i]);
-                                    }
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    case CD:
-                        //Change Directories
-                        printf("");
-                        char *cd_path = args[1];
-
-                        if (num_args > 2) {
-                            perror("cd: Too many arguments");
-                        } else {
-                            //If we have one arg change to the home directory
-                            if (num_args == 1) {
-                                cd_path = homedir;
-                                //Else change to the directory we give it
-                            } else if (num_args == 2) {
-                                cd_path = args[1];
-                            }
-
-
-                            //In theory we just want to swap the owd with the cwd
-                            //But lots of code for swapping two strings because everyone loves C
-                            if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
-                                perror("getcwd");
-                                exit(2);
-                            }
-
-                            if (cd_path[0] == '-') {
-                                if (chdir(owd) < 0) {
-                                    printf("Invalid Directory: %d\n", errno);
-                                } else {
-                                    free(cwd);
-                                    cwd = malloc((int) strlen(owd));
-                                    strcpy(cwd, owd);
-
-
-                                    free(owd);
-                                    owd = malloc((int) strlen(BUFFER));
-                                    strcpy(owd, BUFFER);
-                                }
-                            } else {
-                                if (chdir(cd_path) < 0) {
-                                    printf("Invalid Directory: %d\n", errno);
-                                } else {
-                                    free(owd);
-                                    owd = malloc((int) strlen(BUFFER));
-                                    strcpy(owd, BUFFER);
-
-                                    if ((pwd = getcwd(BUFFER, BUFFER_SIZE + 1)) == NULL) {
-                                        perror("getcwd");
-                                        exit(2);
-                                    }
-
-                                    free(cwd);
-                                    cwd = malloc((int) strlen(BUFFER));
-                                    strcpy(cwd, BUFFER);
-                                }
-                            }
-                        }
-                        break;
-                    case PWD:
-                        //Print working directory
-                        printf("%s\n", cwd);
-                        break;
-                    case LIST:
-                        //List current directory for one arg
-                        if (num_args == 1) {
-                            list(cwd);
-                            //List all of them for the others
-                        } else {
-                            for (int i = 1; i < MAXARGS; i++) {
-                                if (args[i] != NULL) {
-                                    printf("[%s]:\n", args[i]);
-                                    list(args[i]);
-                                }
-                            }
-                        }
-                        break;
-                    case PID:
-                        //Print pid of shell
-                        printf("");
-                        int pid = getpid();
-                        printf("%d\n", pid);
-                        break;
-                    case KILL:
-                        //If three args, we have a flag and a pid
-                        if (num_args == 3) {
-                            char *pid_str = args[2];
-                            char *signal_str = args[1];
-
-                            char *end;
-                            long pid_num;
-                            long sig_num;
-
-                            //using strtol because it supports error catching
-                            pid_num = strtol(pid_str, &end, 10);
-                            //converting pid
-                            if (end == pid_str) {
-                                printf("%s\n", "Cannot convert string to number");
-                            }
-                            //get rid of the - flag
-                            signal_str[0] = ' ';
-                            sig_num = strtol(signal_str, &end, 10);
-
-                            if (end == signal_str) {
-                                printf("%s\n", "Cannot convert string to number");
-                            }
-
-                            int id = (int) pid_num;
-                            int sig = (int) sig_num;
-                            kill(id, sig_num);
-                            //If its two args just send the default SIGTERM
-                        } else if (num_args == 2) {
-                            char *pid_str = args[1];
-                            char *end;
-                            long num;
-                            num = strtol(pid_str, &end, 10);
-                            if (end == pid_str) {
-                                printf("%s\n", "Cannot convert string to number");
-                            }
-                            int id = (int) num;
-                            kill(id, SIGTERM);
-                        } else {
-                            printf("%s\n", "kill: Incorrect amount of arguments");
-                        }
-                        break;
-                    case PROMPT:
-                        //Switch the prompt to a new string
-                        free(prompt_prefix);
-                        if (num_args == 1) {
-                            fgets(BUFFER, BUFFER_SIZE, stdin);
-                            len = (int) strlen(BUFFER);
-                            BUFFER[len - 1] = '\0';
-                            prompt_prefix = (char *) malloc(len);
-                            strcpy(prompt_prefix, BUFFER);
-                        } else if (num_args == 2) {
-                            prompt_prefix = (char *) malloc(strlen(args[1]));
-                            strcpy(prompt_prefix, args[1]);
-                        }
-                        break;
-                    case PRINT_ENV:
-                        //Print our enviornment
-                        printenv(num_args, envp, args);
-                        break;
-                    case ALIAS:
-                        //Set up alias table
-                        if (num_args == 1) {
-                            traverse(alias, MAX_COMMAND_HISTORY, 1);
-                        } else if (num_args == 2) {
-
-                        } else {
-                            char ALSBUF[BUFFER_SIZE];
-                            strcpy(ALSBUF, "");
-                            for (int i = 2; i < MAXARGS; i++) {
-                                if (args[i] != NULL) {
-                                    //Sprintf produced some strange results so use strcat
-                                    strcat(ALSBUF, args[i]);
-                                    strcat(ALSBUF, " ");
-                                } else {
-                                    break;
-                                }
-                            }
-
-                            int len = strlen(ALSBUF);
-                            ALSBUF[len - 1] = '\0';
-
-                            alias = append(alias, args[1], ALSBUF);
-                        }
-                        break;
-                    case HISTORY:
-                        //Convert str to int and print that many commands
-                        if (num_args == 2) {
-                            char *args_str = args[1];
-                            long args_num;
-                            char *end;
-
-                            args_num = strtol(args_str, &end, 10);
-                            if (end == args_str) {
-                                printf("%s\n", "Cannot convert string to number");
-                            } else {
-                                int arg_int = (int) args_num;
-                                traverse(history, arg_int, 0);
-                            }
-                            //Default print last 10
-                        } else if (num_args == 1) {
-                            traverse(history, 10, 0);
-                        } else {
-                            printf("%s\n", "history: Invalid number of arguments");
-                        }
-                        break;
-                    case SET_ENV:
-                        //Print env if zero args
-                        if (num_args == 1) {
-                            printenv(num_args, envp, args);
-                        } else if (num_args == 2) {
-                            //Set to empty
-                            setenv(args[1], "", 1);
-                        } else if (num_args == 3) {
-                            //Reset vars
-                            setenv(args[1], args[2], 1);
-
-                            //special care for home and path
-                            if (strcmp(args[1], "HOME") == 0) {
-                                homedir = getenv("HOME");
-                            } else if (strcmp(args[1], "PATH") == 0) {
-                                pathlist = get_path();
-                            }
-                        } else {
-                            printf("%s\n", "setenv: Incorrect amount of arguments");
-                        }
-                        break;
-
-                    case WATCHUSER:
-                        if(num_args == 2){
-                            printf("Watching user %s\n", args[1]);
-
-                            char* user = (char *)malloc(strlen(args[1]));
-                            strcpy(user, args[1]);
-                            
-                            pthread_mutex_lock(&lock);
-                            watchuser = userAppend(watchuser, user);
-                            pthread_mutex_unlock(&lock);
-
-                            //Spin up thread if it doesn't exist
-                            if(watching_users == 0){
-                                pthread_create(&watchuser_threadid, NULL, watchuser_thread, NULL);
-                                watching_users = 1;
-                            }
-                        }else{
-                            printf("watchuser: Not enough arguments\n");
-                        }
-
-                        break;
-                    case WATCHMAIL:
-                        printf("Watching mail\n");
-
-                        if(num_args == 2){
-                            struct stat buffer;
-                            int exist = stat(args[1],&buffer);
-                            if(exist == 0){
-                                pthread_t thread_id;
-                        
-                                char* filepath = (char *)malloc(strlen(args[1]));
-                                strcpy(filepath, args[1]);
-                                pthread_create(&thread_id, NULL, watchmail_thread, (void *)filepath);
-                                watchmail = mailAppend(watchmail, filepath, thread_id);
-                            }else{
-                                printf("watchmail: %s does not exist\n", args[1]);
-                            }
-                            
-                        }else if(num_args == 3){
-                            if(strcmp(args[2], "off") == 0){
-                                watchmail = mailListRemoveNode(watchmail,args[1]);
-                            }else{
-                                printf("watchmail: Wrong third argument\n");
-                            }
-                        }else{
-                            printf("watchmail: Invalid amount of arguments\n");
-                        }
-
-                        break;
-                    case NOCLOBBER:
-                        //Toggles noclobber
-                        if(noclobber == 0){
-                            printf("Noclobber on!\n");
-                            noclobber = 1;
-                        }else{
-                            printf("Noclobber off!\n");
-                            noclobber = 0;
-                        }
-                        break;
-                    default:
-                        //Assume user wants to run an actual command
-                        
-                        execute_external(args, pathlist, num_args, envp, 1);
-                        //free(cmd_path);
-                }
-                */
+                run_command(command_index, args, pathlist, num_args, envp, 1);
             }
 
             free(token);
@@ -787,7 +461,7 @@ int sh(int argc, char **argv, char **envp) {
     return 0;
 } /* sh() */
 
-void run_command(int command_index, char** args, char* pathlist, int num_args, char** envp){
+void run_command(int command_index, char** args, char* pathlist, int num_args, char** envp, int supress_output){
     switch (command_index) {
         //Exit the shell
         case EXIT:
@@ -1106,7 +780,7 @@ void run_command(int command_index, char** args, char* pathlist, int num_args, c
         default:
             //Assume user wants to run an actual command
             
-            execute_external(args, pathlist, num_args, envp, 1);
+            execute_external(args, pathlist, num_args, envp, supress_output);
             //free(cmd_path);
     }
 }
