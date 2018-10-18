@@ -7,6 +7,8 @@ int sh(int argc, char **argv, char **envp);
 
 void printenv(int num_args, char **envp, char **args);
 
+void execute_external(char** args, char* pathlist, int num_args, char** envp, int message);
+
 char *which(char *command, struct pathelement *pathlist);
 
 char *where(char *command, struct pathelement *pathlist);

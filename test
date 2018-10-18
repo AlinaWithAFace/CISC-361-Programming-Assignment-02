@@ -1,32 +1,6 @@
-total 304
--rw-rw-r-- 1 james james   332 Oct 11 22:42 CMakeLists.txt
--rw-rw-r-- 1 james james  1405 Oct  1 15:23 get_path.c
--rw-r--r-- 1 james james   381 Sep 24 19:03 get_path.h
--rw-rw-r-- 1 james james   549 Oct 11 22:42 get_path_main.c
--rw-rw-r-- 1 james james  7184 Oct 15 19:49 get_path.o
--rw-rw-r-- 1 james james     2 Oct 15 21:28 h
--rw-rw-r-- 1 james james     3 Oct 15 21:27 hh
--rw-rw-r-- 1 james james     5 Oct 15 21:26 jfkfjkfj
-drwxrwxr-x 2 james james  4096 Oct 11 23:33 l
--rw-rw-r-- 1 james james  1986 Oct 10 19:39 linked_list.c
--rw-rw-r-- 1 james james   282 Oct 10 19:40 linked_list.h
--rw-rw-r-- 1 james james  8648 Oct 15 19:49 linked_list.o
--rw-r--r-- 1 james james   281 Sep 24 17:59 main.c
--rw-rw-r-- 1 james james   743 Oct 15 19:43 Makefile
--rw-rw-r-- 1 james james    10 Oct 15 21:24 mem
--rwxrwxr-x 1 james james 53376 Oct 15 21:33 mysh
--rw-rw-r-- 1 james james 16128 Oct 11 22:42 Programming-Assignment-03-README.md
--rw-r--r-- 1 james james 13454 Sep 24 17:59 README.md
--rw-rw-r-- 1 james james 33723 Oct 15 21:33 sh.c
--rw-rw-r-- 1 james james   422 Oct 11 22:42 sh.h
--rw-rw-r-- 1 james james 44808 Oct 15 21:33 sh.o
--rw-rw-r-- 1 james james     0 Oct 15 21:33 test
--rwxrwxr-x 1 james james  8384 Oct 15 19:43 test-1+2
--rw-rw-r-- 1 james james   253 Oct 15 19:36 test-1+2.c
--rw-rw-r-- 1 james james  6096 Oct 15 19:38 test-1+2.o
--rw-rw-r-- 1 james james  2073 Oct 11 22:41 watchmail_list.c
--rw-rw-r-- 1 james james   355 Oct 11 22:41 watchmail_list.h
--rw-rw-r-- 1 james james  9336 Oct 15 19:49 watchmail_list.o
--rw-rw-r-- 1 james james  1218 Oct 11 22:57 watchuser_list.c
--rw-rw-r-- 1 james james   216 Oct 11 22:41 watchuser_list.h
--rw-rw-r-- 1 james james  7504 Oct 15 19:49 watchuser_list.o
+hello
+goodbye
+hello
+goodbye
+hello my baby
+hello
